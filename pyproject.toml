@@ -1,6 +1,6 @@
 [project]
 name = "permitstack"
-version = "0.0.2"
+version = "1.0.0"
 description = "Official Python SDK for the PermitStack building permit data API. Search 15.6M+ US building permits across 54 cities."
 authors = [{ name = "PermitStack", email = "support@aisaasfactory.io" },]
 readme = "README.md"
