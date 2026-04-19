@@ -1,0 +1,37 @@
+speakeasyVersion: 1.761.8
+sources:
+    PermitStack:
+        sourceNamespace: permit-stack
+        sourceRevisionDigest: sha256:504937b6209f9472550cf2a1371ed98be3e03a01363a4e9f2f7d921848e2662e
+        sourceBlobDigest: sha256:a65a7244352788113324984111c662cde3caaa4acd09ff074532bca7bb91a3c5
+        tags:
+            - latest
+            - 1.0.0
+targets:
+    permitstack:
+        source: PermitStack
+        sourceNamespace: permit-stack
+        sourceRevisionDigest: sha256:504937b6209f9472550cf2a1371ed98be3e03a01363a4e9f2f7d921848e2662e
+        sourceBlobDigest: sha256:a65a7244352788113324984111c662cde3caaa4acd09ff074532bca7bb91a3c5
+        codeSamplesNamespace: permit-stack-python-code-samples
+        codeSamplesRevisionDigest: sha256:424e3be78353accaa7f99df343e1126c5843e8bad691f019cf6bc2e6f4f28898
+workflow:
+    workflowVersion: 1.0.0
+    speakeasyVersion: latest
+    sources:
+        PermitStack:
+            inputs:
+                - location: https://api.permit-stack.com/public-openapi.json
+            output: .speakeasy/out.openapi.yaml
+            registry:
+                location: registry.speakeasyapi.dev/permitstack/openapi/permit-stack
+    targets:
+        permitstack:
+            target: python
+            source: PermitStack
+            codeSamples:
+                registry:
+                    location: registry.speakeasyapi.dev/permitstack/openapi/permit-stack-python-code-samples
+                labelOverride:
+                    fixedValue: Python (SDK)
+                blocking: false
