@@ -17,173 +17,105 @@ from typing import Optional
 from typing_extensions import Annotated, NotRequired, TypedDict
 
 
-class SearchPermitsRequestTypedDict(TypedDict):
+class ExportPermitsRequestTypedDict(TypedDict):
     zip_code: NotRequired[Nullable[str]]
-    r"""5-digit ZIP code"""
     city: NotRequired[Nullable[str]]
-    r"""City name"""
     state: NotRequired[Nullable[str]]
-    r"""2-letter state code"""
-    jurisdiction: NotRequired[Nullable[str]]
-    r"""Jurisdiction name (e.g. 'Wake County', 'Tacoma') or partial match"""
-    lat: NotRequired[Nullable[float]]
-    r"""Latitude for radius search"""
-    lng: NotRequired[Nullable[float]]
-    r"""Longitude for radius search"""
-    radius_miles: NotRequired[float]
-    r"""Radius in miles (used with lat/lng)"""
     category: NotRequired[Nullable[str]]
-    r"""Permit category (e.g. solar, SOLAR, roofing, hvac — case insensitive)"""
     status: NotRequired[Nullable[PermitStatus]]
-    r"""Permit status (e.g. issued, filed, final)"""
     property_type: NotRequired[Nullable[PropertyType]]
-    r"""Property type (e.g. residential, commercial)"""
     tag: NotRequired[Nullable[str]]
-    r"""Filter by tag"""
     filed_after: NotRequired[Nullable[date]]
-    r"""Filed on or after this date"""
     filed_before: NotRequired[Nullable[date]]
-    r"""Filed on or before this date"""
     issued_after: NotRequired[Nullable[date]]
-    r"""Issued on or after this date"""
     issued_before: NotRequired[Nullable[date]]
-    r"""Issued on or before this date"""
     min_value: NotRequired[Nullable[float]]
-    r"""Minimum estimated value"""
     max_value: NotRequired[Nullable[float]]
-    r"""Maximum estimated value"""
     q: NotRequired[Nullable[str]]
-    r"""Full-text search query"""
     contractor_name: NotRequired[Nullable[str]]
-    r"""Contractor name (partial match)"""
-    page: NotRequired[int]
-    per_page: NotRequired[int]
+    limit: NotRequired[int]
 
 
-class SearchPermitsRequest(BaseModel):
+class ExportPermitsRequest(BaseModel):
     zip_code: Annotated[
         OptionalNullable[str],
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
     ] = UNSET
-    r"""5-digit ZIP code"""
 
     city: Annotated[
         OptionalNullable[str],
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
     ] = UNSET
-    r"""City name"""
 
     state: Annotated[
         OptionalNullable[str],
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
     ] = UNSET
-    r"""2-letter state code"""
-
-    jurisdiction: Annotated[
-        OptionalNullable[str],
-        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
-    ] = UNSET
-    r"""Jurisdiction name (e.g. 'Wake County', 'Tacoma') or partial match"""
-
-    lat: Annotated[
-        OptionalNullable[float],
-        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
-    ] = UNSET
-    r"""Latitude for radius search"""
-
-    lng: Annotated[
-        OptionalNullable[float],
-        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
-    ] = UNSET
-    r"""Longitude for radius search"""
-
-    radius_miles: Annotated[
-        Optional[float],
-        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
-    ] = 5
-    r"""Radius in miles (used with lat/lng)"""
 
     category: Annotated[
         OptionalNullable[str],
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
     ] = UNSET
-    r"""Permit category (e.g. solar, SOLAR, roofing, hvac — case insensitive)"""
 
     status: Annotated[
         OptionalNullable[PermitStatus],
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
     ] = UNSET
-    r"""Permit status (e.g. issued, filed, final)"""
 
     property_type: Annotated[
         OptionalNullable[PropertyType],
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
     ] = UNSET
-    r"""Property type (e.g. residential, commercial)"""
 
     tag: Annotated[
         OptionalNullable[str],
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
     ] = UNSET
-    r"""Filter by tag"""
 
     filed_after: Annotated[
         OptionalNullable[date],
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
     ] = UNSET
-    r"""Filed on or after this date"""
 
     filed_before: Annotated[
         OptionalNullable[date],
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
     ] = UNSET
-    r"""Filed on or before this date"""
 
     issued_after: Annotated[
         OptionalNullable[date],
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
     ] = UNSET
-    r"""Issued on or after this date"""
 
     issued_before: Annotated[
         OptionalNullable[date],
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
     ] = UNSET
-    r"""Issued on or before this date"""
 
     min_value: Annotated[
         OptionalNullable[float],
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
     ] = UNSET
-    r"""Minimum estimated value"""
 
     max_value: Annotated[
         OptionalNullable[float],
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
     ] = UNSET
-    r"""Maximum estimated value"""
 
     q: Annotated[
         OptionalNullable[str],
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
     ] = UNSET
-    r"""Full-text search query"""
 
     contractor_name: Annotated[
         OptionalNullable[str],
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
     ] = UNSET
-    r"""Contractor name (partial match)"""
 
-    page: Annotated[
+    limit: Annotated[
         Optional[int],
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
-    ] = 1
-
-    per_page: Annotated[
-        Optional[int],
-        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
-    ] = 25
+    ] = 1000
 
     @model_serializer(mode="wrap")
     def serialize_model(self, handler):
@@ -192,10 +124,6 @@ class SearchPermitsRequest(BaseModel):
                 "zip_code",
                 "city",
                 "state",
-                "jurisdiction",
-                "lat",
-                "lng",
-                "radius_miles",
                 "category",
                 "status",
                 "property_type",
@@ -208,8 +136,7 @@ class SearchPermitsRequest(BaseModel):
                 "max_value",
                 "q",
                 "contractor_name",
-                "page",
-                "per_page",
+                "limit",
             ]
         )
         nullable_fields = set(
@@ -217,9 +144,6 @@ class SearchPermitsRequest(BaseModel):
                 "zip_code",
                 "city",
                 "state",
-                "jurisdiction",
-                "lat",
-                "lng",
                 "category",
                 "status",
                 "property_type",

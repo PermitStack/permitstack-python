@@ -15,7 +15,6 @@ from typing import Any, Callable, Dict, Optional, TYPE_CHECKING, Union, cast
 import weakref
 
 if TYPE_CHECKING:
-    from permitstack.bulk_export import BulkExport
     from permitstack.contractors import Contractors
     from permitstack.health import Health
     from permitstack.permits import Permits
@@ -27,23 +26,25 @@ class Permitstack(BaseSDK):
     r"""PermitStack:
     ## PermitStack Building Permit API
 
-    Access 15.59M+ building permits across 54 U.S. cities and counties, updated daily from official open data portals.
+    Access 33M+ building permits across 145 active U.S. jurisdictions (plus 16 historical archives), updated daily from official open data portals.
 
     ### Getting started
-    1. Sign up at [permit-stack.com](https://permit-stack.com/#pricing) for a free API key (1,000 req/day)
+    1. Sign up at [permit-stack.com](https://permit-stack.com/#pricing) for a free API key (100 req/day)
     2. Pass your key as `X-API-Key` header on every request
     3. See the `/v1/permits/search` endpoint to get started
 
     ### Rate limits
     Tier       | Requests/min | Requests/day
     -----------|--------------|-------------
-    Free       | 30           | 1,000
+    Free       | 30           | 100
+    Indie      | 30           | 1,000
+    Hobbyist   | 30           | 2,500
     Developer  | 60           | 10,000
     Startup    | 200          | 100,000
     Growth     | 500          | 500,000
 
     ### Support
-    support@aisaasfactory.io
+    support@permit-stack.com
 
     """
 
@@ -55,8 +56,6 @@ class Permitstack(BaseSDK):
     r"""Search contractors and see their permit history"""
     property_history: "PropertyHistory"
     r"""Get permit history for a specific address"""
-    bulk_export: "BulkExport"
-    r"""Export permit data in bulk (CSV)"""
     webhooks: "Webhooks"
     r"""Subscribe to real-time permit events (paid tiers)"""
     _sub_sdk_map = {
@@ -64,7 +63,6 @@ class Permitstack(BaseSDK):
         "permits": ("permitstack.permits", "Permits"),
         "contractors": ("permitstack.contractors", "Contractors"),
         "property_history": ("permitstack.property_history", "PropertyHistory"),
-        "bulk_export": ("permitstack.bulk_export", "BulkExport"),
         "webhooks": ("permitstack.webhooks", "Webhooks"),
     }
 
@@ -113,7 +111,9 @@ class Permitstack(BaseSDK):
         ), "The provided async_client must implement the AsyncHttpClient protocol."
 
         security: Any = None
-        if callable(api_key):
+        if api_key is None:
+            security = None
+        elif callable(api_key):
             # pylint: disable=unnecessary-lambda-assignment
             security = lambda: models.Security(api_key=api_key())
         else:

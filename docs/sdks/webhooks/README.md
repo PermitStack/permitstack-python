@@ -9,6 +9,8 @@ Subscribe to real-time permit events (paid tiers)
 * [list_webhooks](#list_webhooks) - List Webhooks
 * [create_webhook](#create_webhook) - Create Webhook
 * [delete_webhook](#delete_webhook) - Delete Webhook
+* [test_webhook](#test_webhook) - Test Webhook
+* [get_webhook_secret](#get_webhook_secret) - Get Webhook Secret
 
 ## list_webhooks
 
@@ -115,6 +117,95 @@ with Permitstack(
 ) as p_client:
 
     res = p_client.webhooks.delete_webhook(webhook_id="<id>")
+
+    # Handle response
+    print(res)
+
+```
+
+### Parameters
+
+| Parameter                                                           | Type                                                                | Required                                                            | Description                                                         |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `webhook_id`                                                        | *str*                                                               | :heavy_check_mark:                                                  | N/A                                                                 |
+| `retries`                                                           | [Optional[utils.RetryConfig]](../../models/utils/retryconfig.md)    | :heavy_minus_sign:                                                  | Configuration to override the default retry behavior of the client. |
+
+### Response
+
+**[Any](../../models/.md)**
+
+### Errors
+
+| Error Type                     | Status Code                    | Content Type                   |
+| ------------------------------ | ------------------------------ | ------------------------------ |
+| errors.HTTPValidationError     | 422                            | application/json               |
+| errors.PermitstackDefaultError | 4XX, 5XX                       | \*/\*                          |
+
+## test_webhook
+
+Send a test event to a webhook URL.
+
+Useful for verifying your webhook endpoint is reachable and signature 
+validation works. Sends a fake permit payload with event=permit.test.
+
+### Example Usage
+
+<!-- UsageSnippet language="python" operationID="test_webhook" method="post" path="/v1/webhooks/{webhook_id}/test" -->
+```python
+import os
+from permitstack import Permitstack
+
+
+with Permitstack(
+    api_key=os.getenv("PERMITSTACK_API_KEY", ""),
+) as p_client:
+
+    res = p_client.webhooks.test_webhook(webhook_id="<id>")
+
+    # Handle response
+    print(res)
+
+```
+
+### Parameters
+
+| Parameter                                                           | Type                                                                | Required                                                            | Description                                                         |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `webhook_id`                                                        | *str*                                                               | :heavy_check_mark:                                                  | N/A                                                                 |
+| `retries`                                                           | [Optional[utils.RetryConfig]](../../models/utils/retryconfig.md)    | :heavy_minus_sign:                                                  | Configuration to override the default retry behavior of the client. |
+
+### Response
+
+**[Any](../../models/.md)**
+
+### Errors
+
+| Error Type                     | Status Code                    | Content Type                   |
+| ------------------------------ | ------------------------------ | ------------------------------ |
+| errors.HTTPValidationError     | 422                            | application/json               |
+| errors.PermitstackDefaultError | 4XX, 5XX                       | \*/\*                          |
+
+## get_webhook_secret
+
+Retrieve your webhook signing secret. Use this to validate signatures.
+
+The X-PermitStack-Signature header on incoming webhook requests is the
+HMAC-SHA256 of the request body using this secret. Verify before 
+processing to ensure the request came from PermitStack.
+
+### Example Usage
+
+<!-- UsageSnippet language="python" operationID="get_webhook_secret" method="get" path="/v1/webhooks/{webhook_id}/secret" -->
+```python
+import os
+from permitstack import Permitstack
+
+
+with Permitstack(
+    api_key=os.getenv("PERMITSTACK_API_KEY", ""),
+) as p_client:
+
+    res = p_client.webhooks.get_webhook_secret(webhook_id="<id>")
 
     # Handle response
     print(res)

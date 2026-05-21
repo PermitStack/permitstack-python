@@ -1,8 +1,8 @@
 [project]
 name = "permitstack"
-version = "1.0.0"
-description = "Official Python SDK for the PermitStack building permit data API. Search 15.6M+ US building permits across 54 cities."
-authors = [{ name = "PermitStack", email = "support@aisaasfactory.io" },]
+version = "0.0.3"
+description = "Official Python SDK for the PermitStack building permit data API."
+authors = [{ name = "PermitStack" },]
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [

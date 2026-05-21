@@ -13,23 +13,25 @@ Developer-friendly & type-safe Python SDK specifically catered to leverage *perm
 PermitStack: 
 ## PermitStack Building Permit API
 
-Access 15.59M+ building permits across 54 U.S. cities and counties, updated daily from official open data portals.
+Access 33M+ building permits across 145 active U.S. jurisdictions (plus 16 historical archives), updated daily from official open data portals.
 
 ### Getting started
-1. Sign up at [permit-stack.com](https://permit-stack.com/#pricing) for a free API key (1,000 req/day)
+1. Sign up at [permit-stack.com](https://permit-stack.com/#pricing) for a free API key (100 req/day)
 2. Pass your key as `X-API-Key` header on every request
 3. See the `/v1/permits/search` endpoint to get started
 
 ### Rate limits
 Tier       | Requests/min | Requests/day
 -----------|--------------|-------------
-Free       | 30           | 1,000
+Free       | 30           | 100
+Indie      | 30           | 1,000
+Hobbyist   | 30           | 2,500
 Developer  | 60           | 10,000
 Startup    | 200          | 100,000
 Growth     | 500          | 500,000
 
 ### Support
-support@aisaasfactory.io
+support@permit-stack.com
 <!-- End Summary [summary] -->
 
 <!-- Start Table of Contents [toc] -->
@@ -215,10 +217,6 @@ with Permitstack(
 <details open>
 <summary>Available methods</summary>
 
-### [BulkExport](docs/sdks/bulkexport/README.md)
-
-* [export_permits_csv](docs/sdks/bulkexport/README.md#export_permits_csv) - Export Permits Csv
-
 ### [Contractors](docs/sdks/contractors/README.md)
 
 * [search_contractors](docs/sdks/contractors/README.md#search_contractors) - Search Contractors
@@ -228,10 +226,12 @@ with Permitstack(
 ### [Health](docs/sdks/health/README.md)
 
 * [health_check](docs/sdks/health/README.md#health_check) - Health Check
+* [public_stats](docs/sdks/health/README.md#public_stats) - Public Stats
 
 ### [Permits](docs/sdks/permits/README.md)
 
 * [search_permits](docs/sdks/permits/README.md#search_permits) - Search Permits
+* [export_permits](docs/sdks/permits/README.md#export_permits) - Export Permits
 * [get_permit](docs/sdks/permits/README.md#get_permit) - Get Permit
 * [get_permits_by_address](docs/sdks/permits/README.md#get_permits_by_address) - Get Permits By Address
 * [get_coverage_stats](docs/sdks/permits/README.md#get_coverage_stats) - Get Coverage Stats
@@ -245,6 +245,8 @@ with Permitstack(
 * [list_webhooks](docs/sdks/webhooks/README.md#list_webhooks) - List Webhooks
 * [create_webhook](docs/sdks/webhooks/README.md#create_webhook) - Create Webhook
 * [delete_webhook](docs/sdks/webhooks/README.md#delete_webhook) - Delete Webhook
+* [test_webhook](docs/sdks/webhooks/README.md#test_webhook) - Test Webhook
+* [get_webhook_secret](docs/sdks/webhooks/README.md#get_webhook_secret) - Get Webhook Secret
 
 </details>
 <!-- End Available Resources and Operations [operations] -->
@@ -353,7 +355,7 @@ with Permitstack(
 
 
 **Inherit from [`PermitstackError`](./src/permitstack/errors/permitstackerror.py)**:
-* [`HTTPValidationError`](./src/permitstack/errors/httpvalidationerror.py): Validation Error. Status code `422`. Applicable to 10 of 13 methods.*
+* [`HTTPValidationError`](./src/permitstack/errors/httpvalidationerror.py): Validation Error. Status code `422`. Applicable to 12 of 16 methods.*
 * [`ResponseValidationError`](./src/permitstack/errors/responsevalidationerror.py): Type mismatch between the response data and the expected Pydantic model. Provides access to the Pydantic validation error via the `cause` attribute.
 
 </details>
