@@ -5,7 +5,7 @@ management:
   docVersion: 1.0.0
   speakeasyVersion: 1.763.5
   generationVersion: 2.884.11
-  releaseVersion: 0.0.3
+  releaseVersion: 1.0.1
   configChecksum: 934adb7d43d0f52ce48f18215286f2c9
 persistentEdits:
   generation_id: 6ed09fd7-dcc4-4b35-a31d-d0c84b49e26b
