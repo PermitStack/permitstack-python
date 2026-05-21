@@ -19,10 +19,11 @@ class Permits(BaseSDK):
         zip_code: OptionalNullable[str] = UNSET,
         city: OptionalNullable[str] = UNSET,
         state: OptionalNullable[str] = UNSET,
+        jurisdiction: OptionalNullable[str] = UNSET,
         lat: OptionalNullable[float] = UNSET,
         lng: OptionalNullable[float] = UNSET,
         radius_miles: Optional[float] = 5,
-        category: OptionalNullable[models.PermitCategory] = UNSET,
+        category: OptionalNullable[str] = UNSET,
         status: OptionalNullable[models.PermitStatus] = UNSET,
         property_type: OptionalNullable[models.PropertyType] = UNSET,
         tag: OptionalNullable[str] = UNSET,
@@ -43,15 +44,14 @@ class Permits(BaseSDK):
     ) -> models.PermitSearchResponse:
         r"""Search Permits
 
-        Search permits with flexible filtering.
-
         :param zip_code: 5-digit ZIP code
         :param city: City name
         :param state: 2-letter state code
+        :param jurisdiction: Jurisdiction name (e.g. 'Wake County', 'Tacoma') or partial match
         :param lat: Latitude for radius search
         :param lng: Longitude for radius search
         :param radius_miles: Radius in miles (used with lat/lng)
-        :param category: Permit category (e.g. solar, roofing, hvac)
+        :param category: Permit category (e.g. solar, SOLAR, roofing, hvac — case insensitive)
         :param status: Permit status (e.g. issued, filed, final)
         :param property_type: Property type (e.g. residential, commercial)
         :param tag: Filter by tag
@@ -84,6 +84,7 @@ class Permits(BaseSDK):
             zip_code=zip_code,
             city=city,
             state=state,
+            jurisdiction=jurisdiction,
             lat=lat,
             lng=lng,
             radius_miles=radius_miles,
@@ -170,10 +171,11 @@ class Permits(BaseSDK):
         zip_code: OptionalNullable[str] = UNSET,
         city: OptionalNullable[str] = UNSET,
         state: OptionalNullable[str] = UNSET,
+        jurisdiction: OptionalNullable[str] = UNSET,
         lat: OptionalNullable[float] = UNSET,
         lng: OptionalNullable[float] = UNSET,
         radius_miles: Optional[float] = 5,
-        category: OptionalNullable[models.PermitCategory] = UNSET,
+        category: OptionalNullable[str] = UNSET,
         status: OptionalNullable[models.PermitStatus] = UNSET,
         property_type: OptionalNullable[models.PropertyType] = UNSET,
         tag: OptionalNullable[str] = UNSET,
@@ -194,15 +196,14 @@ class Permits(BaseSDK):
     ) -> models.PermitSearchResponse:
         r"""Search Permits
 
-        Search permits with flexible filtering.
-
         :param zip_code: 5-digit ZIP code
         :param city: City name
         :param state: 2-letter state code
+        :param jurisdiction: Jurisdiction name (e.g. 'Wake County', 'Tacoma') or partial match
         :param lat: Latitude for radius search
         :param lng: Longitude for radius search
         :param radius_miles: Radius in miles (used with lat/lng)
-        :param category: Permit category (e.g. solar, roofing, hvac)
+        :param category: Permit category (e.g. solar, SOLAR, roofing, hvac — case insensitive)
         :param status: Permit status (e.g. issued, filed, final)
         :param property_type: Property type (e.g. residential, commercial)
         :param tag: Filter by tag
@@ -235,6 +236,7 @@ class Permits(BaseSDK):
             zip_code=zip_code,
             city=city,
             state=state,
+            jurisdiction=jurisdiction,
             lat=lat,
             lng=lng,
             radius_miles=radius_miles,
@@ -297,6 +299,284 @@ class Permits(BaseSDK):
         response_data: Any = None
         if utils.match_response(http_res, "200", "application/json"):
             return unmarshal_json_response(models.PermitSearchResponse, http_res)
+        if utils.match_response(http_res, "422", "application/json"):
+            response_data = unmarshal_json_response(
+                errors.HTTPValidationErrorData, http_res
+            )
+            raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, "4XX", "*"):
+            http_res_text = await utils.stream_to_text_async(http_res)
+            raise errors.PermitstackDefaultError(
+                "API error occurred", http_res, http_res_text
+            )
+        if utils.match_response(http_res, "5XX", "*"):
+            http_res_text = await utils.stream_to_text_async(http_res)
+            raise errors.PermitstackDefaultError(
+                "API error occurred", http_res, http_res_text
+            )
+
+        raise errors.PermitstackDefaultError("Unexpected response received", http_res)
+
+    def export_permits(
+        self,
+        *,
+        zip_code: OptionalNullable[str] = UNSET,
+        city: OptionalNullable[str] = UNSET,
+        state: OptionalNullable[str] = UNSET,
+        category: OptionalNullable[str] = UNSET,
+        status: OptionalNullable[models.PermitStatus] = UNSET,
+        property_type: OptionalNullable[models.PropertyType] = UNSET,
+        tag: OptionalNullable[str] = UNSET,
+        filed_after: OptionalNullable[date] = UNSET,
+        filed_before: OptionalNullable[date] = UNSET,
+        issued_after: OptionalNullable[date] = UNSET,
+        issued_before: OptionalNullable[date] = UNSET,
+        min_value: OptionalNullable[float] = UNSET,
+        max_value: OptionalNullable[float] = UNSET,
+        q: OptionalNullable[str] = UNSET,
+        contractor_name: OptionalNullable[str] = UNSET,
+        limit: Optional[int] = 1000,
+        retries: OptionalNullable[utils.RetryConfig] = UNSET,
+        server_url: Optional[str] = None,
+        timeout_ms: Optional[int] = None,
+        http_headers: Optional[Mapping[str, str]] = None,
+    ) -> Any:
+        r"""Export Permits
+
+        Export permits matching filters as CSV. Tier-gated row limits.
+
+        :param zip_code:
+        :param city:
+        :param state:
+        :param category:
+        :param status:
+        :param property_type:
+        :param tag:
+        :param filed_after:
+        :param filed_before:
+        :param issued_after:
+        :param issued_before:
+        :param min_value:
+        :param max_value:
+        :param q:
+        :param contractor_name:
+        :param limit:
+        :param retries: Override the default retry configuration for this method
+        :param server_url: Override the default server URL for this method
+        :param timeout_ms: Override the default request timeout configuration for this method in milliseconds
+        :param http_headers: Additional headers to set or replace on requests.
+        """
+        base_url = None
+        url_variables = None
+        if timeout_ms is None:
+            timeout_ms = self.sdk_configuration.timeout_ms
+
+        if server_url is not None:
+            base_url = server_url
+        else:
+            base_url = self._get_url(base_url, url_variables)
+
+        request = models.ExportPermitsRequest(
+            zip_code=zip_code,
+            city=city,
+            state=state,
+            category=category,
+            status=status,
+            property_type=property_type,
+            tag=tag,
+            filed_after=filed_after,
+            filed_before=filed_before,
+            issued_after=issued_after,
+            issued_before=issued_before,
+            min_value=min_value,
+            max_value=max_value,
+            q=q,
+            contractor_name=contractor_name,
+            limit=limit,
+        )
+
+        req = self._build_request(
+            method="GET",
+            path="/v1/permits/export",
+            base_url=base_url,
+            url_variables=url_variables,
+            request=request,
+            request_body_required=False,
+            request_has_path_params=False,
+            request_has_query_params=True,
+            user_agent_header="user-agent",
+            accept_header_value="application/json",
+            http_headers=http_headers,
+            security=self.sdk_configuration.security,
+            allow_empty_value=None,
+            timeout_ms=timeout_ms,
+        )
+
+        if retries == UNSET:
+            if self.sdk_configuration.retry_config is not UNSET:
+                retries = self.sdk_configuration.retry_config
+
+        retry_config = None
+        if isinstance(retries, utils.RetryConfig):
+            retry_config = (retries, ["429", "500", "502", "503", "504"])
+
+        http_res = self.do_request(
+            hook_ctx=HookContext(
+                config=self.sdk_configuration,
+                base_url=base_url or "",
+                operation_id="export_permits",
+                oauth2_scopes=None,
+                security_source=get_security_from_env(
+                    self.sdk_configuration.security, models.Security
+                ),
+            ),
+            request=req,
+            is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
+            retry_config=retry_config,
+        )
+
+        response_data: Any = None
+        if utils.match_response(http_res, "200", "application/json"):
+            return unmarshal_json_response(Any, http_res)
+        if utils.match_response(http_res, "422", "application/json"):
+            response_data = unmarshal_json_response(
+                errors.HTTPValidationErrorData, http_res
+            )
+            raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, "4XX", "*"):
+            http_res_text = utils.stream_to_text(http_res)
+            raise errors.PermitstackDefaultError(
+                "API error occurred", http_res, http_res_text
+            )
+        if utils.match_response(http_res, "5XX", "*"):
+            http_res_text = utils.stream_to_text(http_res)
+            raise errors.PermitstackDefaultError(
+                "API error occurred", http_res, http_res_text
+            )
+
+        raise errors.PermitstackDefaultError("Unexpected response received", http_res)
+
+    async def export_permits_async(
+        self,
+        *,
+        zip_code: OptionalNullable[str] = UNSET,
+        city: OptionalNullable[str] = UNSET,
+        state: OptionalNullable[str] = UNSET,
+        category: OptionalNullable[str] = UNSET,
+        status: OptionalNullable[models.PermitStatus] = UNSET,
+        property_type: OptionalNullable[models.PropertyType] = UNSET,
+        tag: OptionalNullable[str] = UNSET,
+        filed_after: OptionalNullable[date] = UNSET,
+        filed_before: OptionalNullable[date] = UNSET,
+        issued_after: OptionalNullable[date] = UNSET,
+        issued_before: OptionalNullable[date] = UNSET,
+        min_value: OptionalNullable[float] = UNSET,
+        max_value: OptionalNullable[float] = UNSET,
+        q: OptionalNullable[str] = UNSET,
+        contractor_name: OptionalNullable[str] = UNSET,
+        limit: Optional[int] = 1000,
+        retries: OptionalNullable[utils.RetryConfig] = UNSET,
+        server_url: Optional[str] = None,
+        timeout_ms: Optional[int] = None,
+        http_headers: Optional[Mapping[str, str]] = None,
+    ) -> Any:
+        r"""Export Permits
+
+        Export permits matching filters as CSV. Tier-gated row limits.
+
+        :param zip_code:
+        :param city:
+        :param state:
+        :param category:
+        :param status:
+        :param property_type:
+        :param tag:
+        :param filed_after:
+        :param filed_before:
+        :param issued_after:
+        :param issued_before:
+        :param min_value:
+        :param max_value:
+        :param q:
+        :param contractor_name:
+        :param limit:
+        :param retries: Override the default retry configuration for this method
+        :param server_url: Override the default server URL for this method
+        :param timeout_ms: Override the default request timeout configuration for this method in milliseconds
+        :param http_headers: Additional headers to set or replace on requests.
+        """
+        base_url = None
+        url_variables = None
+        if timeout_ms is None:
+            timeout_ms = self.sdk_configuration.timeout_ms
+
+        if server_url is not None:
+            base_url = server_url
+        else:
+            base_url = self._get_url(base_url, url_variables)
+
+        request = models.ExportPermitsRequest(
+            zip_code=zip_code,
+            city=city,
+            state=state,
+            category=category,
+            status=status,
+            property_type=property_type,
+            tag=tag,
+            filed_after=filed_after,
+            filed_before=filed_before,
+            issued_after=issued_after,
+            issued_before=issued_before,
+            min_value=min_value,
+            max_value=max_value,
+            q=q,
+            contractor_name=contractor_name,
+            limit=limit,
+        )
+
+        req = self._build_request_async(
+            method="GET",
+            path="/v1/permits/export",
+            base_url=base_url,
+            url_variables=url_variables,
+            request=request,
+            request_body_required=False,
+            request_has_path_params=False,
+            request_has_query_params=True,
+            user_agent_header="user-agent",
+            accept_header_value="application/json",
+            http_headers=http_headers,
+            security=self.sdk_configuration.security,
+            allow_empty_value=None,
+            timeout_ms=timeout_ms,
+        )
+
+        if retries == UNSET:
+            if self.sdk_configuration.retry_config is not UNSET:
+                retries = self.sdk_configuration.retry_config
+
+        retry_config = None
+        if isinstance(retries, utils.RetryConfig):
+            retry_config = (retries, ["429", "500", "502", "503", "504"])
+
+        http_res = await self.do_request_async(
+            hook_ctx=HookContext(
+                config=self.sdk_configuration,
+                base_url=base_url or "",
+                operation_id="export_permits",
+                oauth2_scopes=None,
+                security_source=get_security_from_env(
+                    self.sdk_configuration.security, models.Security
+                ),
+            ),
+            request=req,
+            is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
+            retry_config=retry_config,
+        )
+
+        response_data: Any = None
+        if utils.match_response(http_res, "200", "application/json"):
+            return unmarshal_json_response(Any, http_res)
         if utils.match_response(http_res, "422", "application/json"):
             response_data = unmarshal_json_response(
                 errors.HTTPValidationErrorData, http_res

@@ -12,10 +12,7 @@ if TYPE_CHECKING:
     )
     from .contractorsummary import ContractorSummary, ContractorSummaryTypedDict
     from .delete_webhookop import DeleteWebhookRequest, DeleteWebhookRequestTypedDict
-    from .export_permits_csvop import (
-        ExportPermitsCsvRequest,
-        ExportPermitsCsvRequestTypedDict,
-    )
+    from .export_permitsop import ExportPermitsRequest, ExportPermitsRequestTypedDict
     from .get_contractor_permitsop import (
         GetContractorPermitsRequest,
         GetContractorPermitsRequestTypedDict,
@@ -30,7 +27,10 @@ if TYPE_CHECKING:
         GetPropertyHistoryRequest,
         GetPropertyHistoryRequestTypedDict,
     )
-    from .permitcategory import PermitCategory
+    from .get_webhook_secretop import (
+        GetWebhookSecretRequest,
+        GetWebhookSecretRequestTypedDict,
+    )
     from .permitdetail import PermitDetail, PermitDetailTypedDict
     from .permitsearchresponse import (
         PermitSearchResponse,
@@ -45,6 +45,7 @@ if TYPE_CHECKING:
     )
     from .search_permitsop import SearchPermitsRequest, SearchPermitsRequestTypedDict
     from .security import Security, SecurityTypedDict
+    from .test_webhookop import TestWebhookRequest, TestWebhookRequestTypedDict
     from .validationerror import (
         Context,
         ContextTypedDict,
@@ -66,8 +67,8 @@ __all__ = [
     "ContractorSummaryTypedDict",
     "DeleteWebhookRequest",
     "DeleteWebhookRequestTypedDict",
-    "ExportPermitsCsvRequest",
-    "ExportPermitsCsvRequestTypedDict",
+    "ExportPermitsRequest",
+    "ExportPermitsRequestTypedDict",
     "GetContractorPermitsRequest",
     "GetContractorPermitsRequestTypedDict",
     "GetContractorRequest",
@@ -78,9 +79,10 @@ __all__ = [
     "GetPermitsByAddressRequestTypedDict",
     "GetPropertyHistoryRequest",
     "GetPropertyHistoryRequestTypedDict",
+    "GetWebhookSecretRequest",
+    "GetWebhookSecretRequestTypedDict",
     "Loc",
     "LocTypedDict",
-    "PermitCategory",
     "PermitDetail",
     "PermitDetailTypedDict",
     "PermitSearchResponse",
@@ -95,6 +97,8 @@ __all__ = [
     "SearchPermitsRequestTypedDict",
     "Security",
     "SecurityTypedDict",
+    "TestWebhookRequest",
+    "TestWebhookRequestTypedDict",
     "ValidationError",
     "ValidationErrorTypedDict",
     "WebhookCreate",
@@ -110,8 +114,8 @@ _dynamic_imports: dict[str, str] = {
     "ContractorSummaryTypedDict": ".contractorsummary",
     "DeleteWebhookRequest": ".delete_webhookop",
     "DeleteWebhookRequestTypedDict": ".delete_webhookop",
-    "ExportPermitsCsvRequest": ".export_permits_csvop",
-    "ExportPermitsCsvRequestTypedDict": ".export_permits_csvop",
+    "ExportPermitsRequest": ".export_permitsop",
+    "ExportPermitsRequestTypedDict": ".export_permitsop",
     "GetContractorPermitsRequest": ".get_contractor_permitsop",
     "GetContractorPermitsRequestTypedDict": ".get_contractor_permitsop",
     "GetContractorRequest": ".get_contractorop",
@@ -122,7 +126,8 @@ _dynamic_imports: dict[str, str] = {
     "GetPermitsByAddressRequestTypedDict": ".get_permits_by_addressop",
     "GetPropertyHistoryRequest": ".get_property_historyop",
     "GetPropertyHistoryRequestTypedDict": ".get_property_historyop",
-    "PermitCategory": ".permitcategory",
+    "GetWebhookSecretRequest": ".get_webhook_secretop",
+    "GetWebhookSecretRequestTypedDict": ".get_webhook_secretop",
     "PermitDetail": ".permitdetail",
     "PermitDetailTypedDict": ".permitdetail",
     "PermitSearchResponse": ".permitsearchresponse",
@@ -137,6 +142,8 @@ _dynamic_imports: dict[str, str] = {
     "SearchPermitsRequestTypedDict": ".search_permitsop",
     "Security": ".security",
     "SecurityTypedDict": ".security",
+    "TestWebhookRequest": ".test_webhookop",
+    "TestWebhookRequestTypedDict": ".test_webhookop",
     "Context": ".validationerror",
     "ContextTypedDict": ".validationerror",
     "Loc": ".validationerror",

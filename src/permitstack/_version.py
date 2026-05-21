@@ -3,10 +3,10 @@
 import importlib.metadata
 
 __title__: str = "permitstack"
-__version__: str = "1.0.0"
+__version__: str = "0.0.3"
 __openapi_doc_version__: str = "1.0.0"
-__gen_version__: str = "2.881.2"
-__user_agent__: str = "speakeasy-sdk/python 1.0.0 2.881.2 1.0.0 permitstack"
+__gen_version__: str = "2.884.11"
+__user_agent__: str = "speakeasy-sdk/python 0.0.3 2.884.11 1.0.0 permitstack"
 
 try:
     if __package__ is not None:
