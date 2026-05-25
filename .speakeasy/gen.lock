@@ -1,16 +1,16 @@
 lockVersion: 2.0.0
 id: b1db3140-684b-40fa-a507-7ec48546a9f9
 management:
-  docChecksum: 8d59e343ebdea387914923e61958c16f
+  docChecksum: 2e747e92f6dedf92d5d7be09c7209f60
   docVersion: 1.0.0
   speakeasyVersion: 1.764.1
   generationVersion: 2.885.1
-  releaseVersion: 1.0.3
-  configChecksum: 66c2327a7ffe42ef89521f2adfb9100d
+  releaseVersion: 1.0.4
+  configChecksum: 2eca5de16af13354a00774d4d4563d02
 persistentEdits:
-  generation_id: 45cb4b60-6240-41e3-b982-fc5ff072f6f4
-  pristine_commit_hash: 5ab854b2ea06c7ecc116b107b1c3c295841f2cd5
-  pristine_tree_hash: 5a34cec279f994bd2acc9aef3cdec793d991b162
+  generation_id: 48252029-1dee-42c8-9ba5-6f6cba3e6144
+  pristine_commit_hash: c930e4b56ebccb355486e1cf7de64d583a94777d
+  pristine_tree_hash: 7298b2dd447aae1e81796e7eb9816c754661b26f
 features:
   python:
     additionalDependencies: 1.0.0
@@ -191,8 +191,8 @@ trackedFiles:
     pristine_git_object: 0a6f0dca9a53a263b89e062983071d9f1696cfd4
   pyproject.toml:
     id: 5d07e7d72637
-    last_write_checksum: sha1:3074aa95996994786f5a8eaeee39c34f7e7a425a
-    pristine_git_object: d811a01c5da51c8c1cd3346729774468d45977f2
+    last_write_checksum: sha1:fa3e0f1ac748e1b5039dc05e0ea0a0a9c23b225e
+    pristine_git_object: 242b6077a490c9ab61231c9b2227194d15a1ad1e
   scripts/publish.sh:
     id: fe273b08f514
     last_write_checksum: sha1:adc9b741c12ad1591ab4870eabe20f0d0a86cd1a
@@ -215,8 +215,8 @@ trackedFiles:
     pristine_git_object: 7bd685ba422ef917271e233921509d40df1fe5b9
   src/permitstack/_version.py:
     id: 8e288bf1e998
-    last_write_checksum: sha1:4c1c147f40bfa72cdfa7f92536ec16e328fce2ac
-    pristine_git_object: 0c8cb42d35b03bbca412bb2ac74c2f493b94b5ac
+    last_write_checksum: sha1:bf8b0ab3b3ba0e21a60e312cdd310817ef768e2a
+    pristine_git_object: e5d8697d02dd1f13f7424e090f9c795f2fa21690
   src/permitstack/basesdk.py:
     id: "507536258098"
     last_write_checksum: sha1:14a019d84b1db6efc52b1102a3d4c839cb0e9683
@@ -363,8 +363,8 @@ trackedFiles:
     pristine_git_object: 3e38f1a929f7d6b1d6de74604aa87e3d8f010544
   src/permitstack/sdk.py:
     id: 28d4bdb5fed0
-    last_write_checksum: sha1:642d3230fe65c85ef39537e0f2cc2746259cf8cc
-    pristine_git_object: 95bc298d82e24f455211731a74daa1c1e3c21dc1
+    last_write_checksum: sha1:e2d3335ff4eca8be65fdab9127fa8c490014af06
+    pristine_git_object: 1a58b83b308b542d6e6abe0aad0e8553c52d57a2
   src/permitstack/sdkconfiguration.py:
     id: 509f58651744
     last_write_checksum: sha1:a0963df642fefbf326706ea7662516689b8e1277
