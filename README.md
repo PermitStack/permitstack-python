@@ -13,7 +13,7 @@ Developer-friendly & type-safe Python SDK specifically catered to leverage *perm
 PermitStack: 
 ## PermitStack Building Permit API
 
-Access 33M+ building permits across 152 active U.S. jurisdictions (plus 16 historical archives), updated daily from official open data portals.
+Access 39M+ building permits across 171 active U.S. jurisdictions (plus 15 historical archives), updated daily from official open data portals.
 
 ### Getting started
 1. Sign up at [permit-stack.com](https://permit-stack.com/#pricing) for a free API key (100 req/day)
@@ -321,7 +321,7 @@ with Permitstack(
     res = None
     try:
 
-        res = p_client.permits.search_permits(radius_miles=5, page=1, per_page=25)
+        res = p_client.permits.search_permits(radius_miles=5, record_kind="permit", page=1, per_page=25)
 
         # Handle response
         print(res)

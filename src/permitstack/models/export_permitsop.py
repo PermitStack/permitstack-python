@@ -25,6 +25,7 @@ class ExportPermitsRequestTypedDict(TypedDict):
     status: NotRequired[Nullable[PermitStatus]]
     property_type: NotRequired[Nullable[PropertyType]]
     tag: NotRequired[Nullable[str]]
+    record_kind: NotRequired[str]
     filed_after: NotRequired[Nullable[date]]
     filed_before: NotRequired[Nullable[date]]
     issued_after: NotRequired[Nullable[date]]
@@ -71,6 +72,11 @@ class ExportPermitsRequest(BaseModel):
         OptionalNullable[str],
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
     ] = UNSET
+
+    record_kind: Annotated[
+        Optional[str],
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = "permit"
 
     filed_after: Annotated[
         OptionalNullable[date],
@@ -128,6 +134,7 @@ class ExportPermitsRequest(BaseModel):
                 "status",
                 "property_type",
                 "tag",
+                "record_kind",
                 "filed_after",
                 "filed_before",
                 "issued_after",

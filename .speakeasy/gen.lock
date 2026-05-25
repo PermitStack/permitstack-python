@@ -1,16 +1,16 @@
 lockVersion: 2.0.0
 id: b1db3140-684b-40fa-a507-7ec48546a9f9
 management:
-  docChecksum: 0ce7ef36462aeeb92987f3efc7c579c8
+  docChecksum: 8d59e343ebdea387914923e61958c16f
   docVersion: 1.0.0
-  speakeasyVersion: 1.763.6
-  generationVersion: 2.884.13
-  releaseVersion: 1.0.2
-  configChecksum: c638e8511ca301cd033c576703819ca0
+  speakeasyVersion: 1.764.1
+  generationVersion: 2.885.1
+  releaseVersion: 1.0.3
+  configChecksum: 66c2327a7ffe42ef89521f2adfb9100d
 persistentEdits:
-  generation_id: b00849d9-3a8f-420a-8f6e-1df0f048fc82
-  pristine_commit_hash: d7dde1c7a05ce929c5cae343821c238ca2c68e97
-  pristine_tree_hash: c311a06263c38aae445adb64df0bf1688c2f282d
+  generation_id: 45cb4b60-6240-41e3-b982-fc5ff072f6f4
+  pristine_commit_hash: 5ab854b2ea06c7ecc116b107b1c3c295841f2cd5
+  pristine_tree_hash: 5a34cec279f994bd2acc9aef3cdec793d991b162
 features:
   python:
     additionalDependencies: 1.0.0
@@ -83,8 +83,8 @@ trackedFiles:
     pristine_git_object: cd3e78ac54d78f904cc318bf234572c62098c9e7
   docs/models/exportpermitsrequest.md:
     id: b536ac315301
-    last_write_checksum: sha1:916aa5f21a1072b932ced210c2f55989153cd532
-    pristine_git_object: 47fa5d21db47e9452d197494ff2ca6aa65ce471e
+    last_write_checksum: sha1:9422e36e9ba46e4d191a0edf79af883944f415f4
+    pristine_git_object: 5942214fb0e7d644515baa31c012c46dc61ea750
   docs/models/getcontractorpermitsrequest.md:
     id: 3decd3ba7e29
     last_write_checksum: sha1:7a15252877c3e1256eadde72f8d740362896eb9f
@@ -139,8 +139,8 @@ trackedFiles:
     pristine_git_object: 0e92dfe3fba465cc1453ac5f2d7fee32ee8df120
   docs/models/searchpermitsrequest.md:
     id: dab263e367ed
-    last_write_checksum: sha1:39014e2b28d87c58564673b6125dc4562a59a473
-    pristine_git_object: 9d1d86b9a2903723fdf5eab5094924d1b7118428
+    last_write_checksum: sha1:3d00ae59db156d0b03a08c3cc503d4a4dd9414ab
+    pristine_git_object: f710ba4f8eb5f8914e42b16dd21016727b5ea003
   docs/models/security.md:
     id: 452e4d4eb67a
     last_write_checksum: sha1:45b7b8881a6560a468153662d61b99605a492edf
@@ -171,8 +171,8 @@ trackedFiles:
     pristine_git_object: 3f025f66eb97ac0e88ae8e589f827a728149f92e
   docs/sdks/permits/README.md:
     id: 45c9c032d965
-    last_write_checksum: sha1:54b6715f590616c73886c477642481708c0c5a50
-    pristine_git_object: 2ed986c5530a8aaf34372f2e75d4a96013e3260f
+    last_write_checksum: sha1:df563d95bafc56d1212665d6fb5e91678971ad1d
+    pristine_git_object: 591983bc20d7656547092946d25b223740d06e38
   docs/sdks/propertyhistory/README.md:
     id: 22f80b6419ad
     last_write_checksum: sha1:477a23fd454ad041c55d9bf5aaca11e1596f7359
@@ -191,8 +191,8 @@ trackedFiles:
     pristine_git_object: 0a6f0dca9a53a263b89e062983071d9f1696cfd4
   pyproject.toml:
     id: 5d07e7d72637
-    last_write_checksum: sha1:a494eba5cd1fe87954dad2774f95a3c69f9270ef
-    pristine_git_object: 80ded98ab33b70f76c9634c474b5ca11e86fc1ac
+    last_write_checksum: sha1:3074aa95996994786f5a8eaeee39c34f7e7a425a
+    pristine_git_object: d811a01c5da51c8c1cd3346729774468d45977f2
   scripts/publish.sh:
     id: fe273b08f514
     last_write_checksum: sha1:adc9b741c12ad1591ab4870eabe20f0d0a86cd1a
@@ -215,8 +215,8 @@ trackedFiles:
     pristine_git_object: 7bd685ba422ef917271e233921509d40df1fe5b9
   src/permitstack/_version.py:
     id: 8e288bf1e998
-    last_write_checksum: sha1:3a1da4418a0949dc93a2fa50a7f0239485e1fe80
-    pristine_git_object: 5f6f70bf26f33a567ea1aacbb9f0643181d9d013
+    last_write_checksum: sha1:4c1c147f40bfa72cdfa7f92536ec16e328fce2ac
+    pristine_git_object: 0c8cb42d35b03bbca412bb2ac74c2f493b94b5ac
   src/permitstack/basesdk.py:
     id: "507536258098"
     last_write_checksum: sha1:14a019d84b1db6efc52b1102a3d4c839cb0e9683
@@ -279,8 +279,8 @@ trackedFiles:
     pristine_git_object: a098269a0d677b844b76ef8e9184435ca1399ab5
   src/permitstack/models/export_permitsop.py:
     id: 6a9f01923ec1
-    last_write_checksum: sha1:671838203995fc3b0905770a8c94b49708e9bede
-    pristine_git_object: 3dc7a99cc3359af4f30d1e37200f74f8c5968c66
+    last_write_checksum: sha1:9ffa654ab278e5af4c6d40949f8b6f85a14e2fb2
+    pristine_git_object: a01fee1c438ac75e1331185411a8f274904fd70c
   src/permitstack/models/get_contractor_permitsop.py:
     id: 5a92ab279222
     last_write_checksum: sha1:b71f2cf9fb167c2d431f963c3519caefdd6c4555
@@ -331,8 +331,8 @@ trackedFiles:
     pristine_git_object: d8702b1bde96b126005a836ef1eb4c9f5b64eef1
   src/permitstack/models/search_permitsop.py:
     id: 4e887984a80e
-    last_write_checksum: sha1:19ddad7fa87740c147f1a371b3e22d6907631e56
-    pristine_git_object: 0c74598a24354397623e8576297495328c176309
+    last_write_checksum: sha1:16ea5490efcddc6b6efa5892ecbfb589c0c05227
+    pristine_git_object: 43d746eecf13ff38fd9b22e95de549c36d5033e4
   src/permitstack/models/security.py:
     id: 797cb440609e
     last_write_checksum: sha1:64263f1ec5862319c276ab2d5b10d81e2e87c574
@@ -351,8 +351,8 @@ trackedFiles:
     pristine_git_object: ea797f206f666917def5699fc085be0831e4e688
   src/permitstack/permits.py:
     id: 8b519e98b655
-    last_write_checksum: sha1:9b4a246d26dce7bcf26a484878977b396ff26970
-    pristine_git_object: 01e37ef0adc930d0a1760caf17d6d2efe64533c3
+    last_write_checksum: sha1:45a68e94cd6647d57efa8127272944e4ab71396a
+    pristine_git_object: c709cf10cf78681d4dbe309f3380b18ab126353e
   src/permitstack/property_history.py:
     id: 68223978e14f
     last_write_checksum: sha1:1347d2566eb0f618e5c53a51ed5704890639196f
@@ -363,8 +363,8 @@ trackedFiles:
     pristine_git_object: 3e38f1a929f7d6b1d6de74604aa87e3d8f010544
   src/permitstack/sdk.py:
     id: 28d4bdb5fed0
-    last_write_checksum: sha1:30a1215a37c4a5db35fde5a636237212e3b83f12
-    pristine_git_object: fa4ca33e05ebb5c03bd64db4eebc5a73256a2723
+    last_write_checksum: sha1:642d3230fe65c85ef39537e0f2cc2746259cf8cc
+    pristine_git_object: 95bc298d82e24f455211731a74daa1c1e3c21dc1
   src/permitstack/sdkconfiguration.py:
     id: 509f58651744
     last_write_checksum: sha1:a0963df642fefbf326706ea7662516689b8e1277
@@ -589,6 +589,7 @@ examples:
           radius_miles: 5
           page: 1
           per_page: 25
+          record_kind: "permit"
       responses:
         "200":
           application/json: {"total": 845908, "page": 488789, "per_page": 568105, "results": []}
@@ -710,6 +711,7 @@ examples:
       parameters:
         query:
           limit: 1000
+          record_kind: "permit"
       responses:
         "200":
           application/json: "<value>"
