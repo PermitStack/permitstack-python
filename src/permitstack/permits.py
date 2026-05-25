@@ -27,6 +27,7 @@ class Permits(BaseSDK):
         status: OptionalNullable[models.PermitStatus] = UNSET,
         property_type: OptionalNullable[models.PropertyType] = UNSET,
         tag: OptionalNullable[str] = UNSET,
+        record_kind: Optional[str] = "permit",
         filed_after: OptionalNullable[date] = UNSET,
         filed_before: OptionalNullable[date] = UNSET,
         issued_after: OptionalNullable[date] = UNSET,
@@ -55,6 +56,7 @@ class Permits(BaseSDK):
         :param status: Permit status (e.g. issued, filed, final)
         :param property_type: Property type (e.g. residential, commercial)
         :param tag: Filter by tag
+        :param record_kind: Record kind: 'permit' (default, building permits only), 'contractor', 'tag', 'non_building', 'admin', or 'all'
         :param filed_after: Filed on or after this date
         :param filed_before: Filed on or before this date
         :param issued_after: Issued on or after this date
@@ -92,6 +94,7 @@ class Permits(BaseSDK):
             status=status,
             property_type=property_type,
             tag=tag,
+            record_kind=record_kind,
             filed_after=filed_after,
             filed_before=filed_before,
             issued_after=issued_after,
@@ -179,6 +182,7 @@ class Permits(BaseSDK):
         status: OptionalNullable[models.PermitStatus] = UNSET,
         property_type: OptionalNullable[models.PropertyType] = UNSET,
         tag: OptionalNullable[str] = UNSET,
+        record_kind: Optional[str] = "permit",
         filed_after: OptionalNullable[date] = UNSET,
         filed_before: OptionalNullable[date] = UNSET,
         issued_after: OptionalNullable[date] = UNSET,
@@ -207,6 +211,7 @@ class Permits(BaseSDK):
         :param status: Permit status (e.g. issued, filed, final)
         :param property_type: Property type (e.g. residential, commercial)
         :param tag: Filter by tag
+        :param record_kind: Record kind: 'permit' (default, building permits only), 'contractor', 'tag', 'non_building', 'admin', or 'all'
         :param filed_after: Filed on or after this date
         :param filed_before: Filed on or before this date
         :param issued_after: Issued on or after this date
@@ -244,6 +249,7 @@ class Permits(BaseSDK):
             status=status,
             property_type=property_type,
             tag=tag,
+            record_kind=record_kind,
             filed_after=filed_after,
             filed_before=filed_before,
             issued_after=issued_after,
@@ -327,6 +333,7 @@ class Permits(BaseSDK):
         status: OptionalNullable[models.PermitStatus] = UNSET,
         property_type: OptionalNullable[models.PropertyType] = UNSET,
         tag: OptionalNullable[str] = UNSET,
+        record_kind: Optional[str] = "permit",
         filed_after: OptionalNullable[date] = UNSET,
         filed_before: OptionalNullable[date] = UNSET,
         issued_after: OptionalNullable[date] = UNSET,
@@ -352,6 +359,7 @@ class Permits(BaseSDK):
         :param status:
         :param property_type:
         :param tag:
+        :param record_kind:
         :param filed_after:
         :param filed_before:
         :param issued_after:
@@ -384,6 +392,7 @@ class Permits(BaseSDK):
             status=status,
             property_type=property_type,
             tag=tag,
+            record_kind=record_kind,
             filed_after=filed_after,
             filed_before=filed_before,
             issued_after=issued_after,
@@ -466,6 +475,7 @@ class Permits(BaseSDK):
         status: OptionalNullable[models.PermitStatus] = UNSET,
         property_type: OptionalNullable[models.PropertyType] = UNSET,
         tag: OptionalNullable[str] = UNSET,
+        record_kind: Optional[str] = "permit",
         filed_after: OptionalNullable[date] = UNSET,
         filed_before: OptionalNullable[date] = UNSET,
         issued_after: OptionalNullable[date] = UNSET,
@@ -491,6 +501,7 @@ class Permits(BaseSDK):
         :param status:
         :param property_type:
         :param tag:
+        :param record_kind:
         :param filed_after:
         :param filed_before:
         :param issued_after:
@@ -523,6 +534,7 @@ class Permits(BaseSDK):
             status=status,
             property_type=property_type,
             tag=tag,
+            record_kind=record_kind,
             filed_after=filed_after,
             filed_before=filed_before,
             issued_after=issued_after,

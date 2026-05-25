@@ -40,6 +40,8 @@ class SearchPermitsRequestTypedDict(TypedDict):
     r"""Property type (e.g. residential, commercial)"""
     tag: NotRequired[Nullable[str]]
     r"""Filter by tag"""
+    record_kind: NotRequired[str]
+    r"""Record kind: 'permit' (default, building permits only), 'contractor', 'tag', 'non_building', 'admin', or 'all'"""
     filed_after: NotRequired[Nullable[date]]
     r"""Filed on or after this date"""
     filed_before: NotRequired[Nullable[date]]
@@ -127,6 +129,12 @@ class SearchPermitsRequest(BaseModel):
     ] = UNSET
     r"""Filter by tag"""
 
+    record_kind: Annotated[
+        Optional[str],
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = "permit"
+    r"""Record kind: 'permit' (default, building permits only), 'contractor', 'tag', 'non_building', 'admin', or 'all'"""
+
     filed_after: Annotated[
         OptionalNullable[date],
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
@@ -200,6 +208,7 @@ class SearchPermitsRequest(BaseModel):
                 "status",
                 "property_type",
                 "tag",
+                "record_kind",
                 "filed_after",
                 "filed_before",
                 "issued_after",
