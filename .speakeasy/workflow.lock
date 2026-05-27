@@ -1,9 +1,9 @@
-speakeasyVersion: 1.764.1
+speakeasyVersion: 1.766.0
 sources:
     PermitStack:
         sourceNamespace: permit-stack
-        sourceRevisionDigest: sha256:95d1fd81245f0da4c15e68b240f2585fbafdbe328b6ba7884c1f0aff8c527f71
-        sourceBlobDigest: sha256:3226a975c6be07988ced5f265f05d104ade4640523a37fdd4c9f6a8a826b44dc
+        sourceRevisionDigest: sha256:0697d789e187fcc88075158c0a2585a6e20c9145b5a3f1c13b8f83101af7033c
+        sourceBlobDigest: sha256:15131b59862b942550fac9f401532a7ab261c8e9f37d8f4d8e0d4f177026191f
         tags:
             - latest
             - 1.0.0
@@ -11,10 +11,10 @@ targets:
     permitstack:
         source: PermitStack
         sourceNamespace: permit-stack
-        sourceRevisionDigest: sha256:95d1fd81245f0da4c15e68b240f2585fbafdbe328b6ba7884c1f0aff8c527f71
-        sourceBlobDigest: sha256:3226a975c6be07988ced5f265f05d104ade4640523a37fdd4c9f6a8a826b44dc
+        sourceRevisionDigest: sha256:0697d789e187fcc88075158c0a2585a6e20c9145b5a3f1c13b8f83101af7033c
+        sourceBlobDigest: sha256:15131b59862b942550fac9f401532a7ab261c8e9f37d8f4d8e0d4f177026191f
         codeSamplesNamespace: permit-stack-python-code-samples
-        codeSamplesRevisionDigest: sha256:f7c99b98b9a1b1c123c3929a1d9bae76eda7b873ee70a6bdc2d6ef7d21e44fc7
+        codeSamplesRevisionDigest: sha256:094571c941671875ce03b964233b5b533ffc360b02c8033e90241f67418d510d
 workflow:
     workflowVersion: 1.0.0
     speakeasyVersion: latest
