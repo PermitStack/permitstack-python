@@ -34,7 +34,7 @@ generation:
     generateNewTests: true
     skipResponseBodyAssertions: false
 python:
-  version: 1.0.5
+  version: 1.1.0
   additionalDependencies:
     dev: {}
     main: {}
@@ -47,6 +47,7 @@ python:
   authors:
     - PermitStack
   baseErrorName: PermitstackError
+  bodyVariantOverloads: false
   clientServerStatusCodesAsErrors: true
   constFieldCasing: normal
   defaultErrorName: PermitstackDefaultError
@@ -76,14 +77,18 @@ python:
   license: Apache-2.0
   maxMethodParams: 999
   methodArguments: infer-optional-args
+  methodTimeoutArgument: timeout-ms
+  methodTimeoutUnits: milliseconds
   moduleName: ""
   multipartArrayFormat: standard
+  optionalDependencies: {}
   outputModelSuffix: output
   packageManager: uv
   packageName: permitstack
   preApplyUnionDiscriminators: true
   pytestFilterWarnings: []
   pytestTimeout: 0
+  rawResponseHelpers: false
   responseFormat: flat
   sseFlatResponse: false
   templateVersion: v2
