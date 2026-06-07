@@ -32,6 +32,7 @@ if TYPE_CHECKING:
         GetWebhookSecretRequestTypedDict,
     )
     from .permitdetail import PermitDetail, PermitDetailTypedDict
+    from .permitenrichment import PermitEnrichment, PermitEnrichmentTypedDict
     from .permitsearchresponse import (
         PermitSearchResponse,
         PermitSearchResponseTypedDict,
@@ -85,6 +86,8 @@ __all__ = [
     "LocTypedDict",
     "PermitDetail",
     "PermitDetailTypedDict",
+    "PermitEnrichment",
+    "PermitEnrichmentTypedDict",
     "PermitSearchResponse",
     "PermitSearchResponseTypedDict",
     "PermitStatus",
@@ -130,6 +133,8 @@ _dynamic_imports: dict[str, str] = {
     "GetWebhookSecretRequestTypedDict": ".get_webhook_secretop",
     "PermitDetail": ".permitdetail",
     "PermitDetailTypedDict": ".permitdetail",
+    "PermitEnrichment": ".permitenrichment",
+    "PermitEnrichmentTypedDict": ".permitenrichment",
     "PermitSearchResponse": ".permitsearchresponse",
     "PermitSearchResponseTypedDict": ".permitsearchresponse",
     "PermitStatus": ".permitstatus",
