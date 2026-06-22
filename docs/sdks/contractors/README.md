@@ -12,7 +12,7 @@ Search contractors and see their permit history
 
 ## search_contractors
 
-Search contractors by name, location, or specialty.
+Search contractors by name, location, or specialty, ranked by activity score.
 
 ### Example Usage
 
@@ -26,7 +26,7 @@ with Permitstack(
     api_key=os.getenv("PERMITSTACK_API_KEY", ""),
 ) as p_client:
 
-    res = p_client.contractors.search_contractors(page=1, per_page=25)
+    res = p_client.contractors.search_contractors(sort="score", page=1, per_page=25)
 
     # Handle response
     print(res)
@@ -42,6 +42,8 @@ with Permitstack(
 | `city`                                                              | *OptionalNullable[str]*                                             | :heavy_minus_sign:                                                  | City name                                                           |
 | `specialty`                                                         | *OptionalNullable[str]*                                             | :heavy_minus_sign:                                                  | Specialty tag (e.g. solar, roofing, hvac)                           |
 | `min_permits`                                                       | *OptionalNullable[int]*                                             | :heavy_minus_sign:                                                  | Minimum total permits                                               |
+| `min_score`                                                         | *OptionalNullable[int]*                                             | :heavy_minus_sign:                                                  | Minimum contractor activity score (0-100)                           |
+| `sort`                                                              | *Optional[str]*                                                     | :heavy_minus_sign:                                                  | Sort order: 'score' (default), 'permits', or 'recent'               |
 | `page`                                                              | *Optional[int]*                                                     | :heavy_minus_sign:                                                  | N/A                                                                 |
 | `per_page`                                                          | *Optional[int]*                                                     | :heavy_minus_sign:                                                  | N/A                                                                 |
 | `retries`                                                           | [Optional[utils.RetryConfig]](../../models/utils/retryconfig.md)    | :heavy_minus_sign:                                                  | Configuration to override the default retry behavior of the client. |

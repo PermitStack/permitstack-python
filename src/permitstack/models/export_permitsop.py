@@ -30,8 +30,19 @@ class ExportPermitsRequestTypedDict(TypedDict):
     filed_before: NotRequired[Nullable[date]]
     issued_after: NotRequired[Nullable[date]]
     issued_before: NotRequired[Nullable[date]]
+    date_after: NotRequired[Nullable[date]]
+    r"""On or after this date, matched against whichever date a record has (issued, else filed)."""
+    date_before: NotRequired[Nullable[date]]
+    r"""On or before this date, matched against whichever date a record has (issued, else filed)."""
+    parcel: NotRequired[Nullable[str]]
+    r"""Parcel number / APN / folio (formatting ignored)."""
     min_value: NotRequired[Nullable[float]]
     max_value: NotRequired[Nullable[float]]
+    min_solar_kw: NotRequired[Nullable[float]]
+    max_solar_kw: NotRequired[Nullable[float]]
+    min_sqft: NotRequired[Nullable[float]]
+    has_enrichment: NotRequired[Nullable[bool]]
+    scope: NotRequired[Nullable[str]]
     q: NotRequired[Nullable[str]]
     contractor_name: NotRequired[Nullable[str]]
     limit: NotRequired[int]
@@ -98,6 +109,24 @@ class ExportPermitsRequest(BaseModel):
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
     ] = UNSET
 
+    date_after: Annotated[
+        OptionalNullable[date],
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+    r"""On or after this date, matched against whichever date a record has (issued, else filed)."""
+
+    date_before: Annotated[
+        OptionalNullable[date],
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+    r"""On or before this date, matched against whichever date a record has (issued, else filed)."""
+
+    parcel: Annotated[
+        OptionalNullable[str],
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+    r"""Parcel number / APN / folio (formatting ignored)."""
+
     min_value: Annotated[
         OptionalNullable[float],
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
@@ -105,6 +134,31 @@ class ExportPermitsRequest(BaseModel):
 
     max_value: Annotated[
         OptionalNullable[float],
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+
+    min_solar_kw: Annotated[
+        OptionalNullable[float],
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+
+    max_solar_kw: Annotated[
+        OptionalNullable[float],
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+
+    min_sqft: Annotated[
+        OptionalNullable[float],
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+
+    has_enrichment: Annotated[
+        OptionalNullable[bool],
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+
+    scope: Annotated[
+        OptionalNullable[str],
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
     ] = UNSET
 
@@ -139,8 +193,16 @@ class ExportPermitsRequest(BaseModel):
                 "filed_before",
                 "issued_after",
                 "issued_before",
+                "date_after",
+                "date_before",
+                "parcel",
                 "min_value",
                 "max_value",
+                "min_solar_kw",
+                "max_solar_kw",
+                "min_sqft",
+                "has_enrichment",
+                "scope",
                 "q",
                 "contractor_name",
                 "limit",
@@ -159,8 +221,16 @@ class ExportPermitsRequest(BaseModel):
                 "filed_before",
                 "issued_after",
                 "issued_before",
+                "date_after",
+                "date_before",
+                "parcel",
                 "min_value",
                 "max_value",
+                "min_solar_kw",
+                "max_solar_kw",
+                "min_sqft",
+                "has_enrichment",
+                "scope",
                 "q",
                 "contractor_name",
             ]

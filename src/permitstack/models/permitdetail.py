@@ -11,7 +11,7 @@ from permitstack.types import (
     UNSET_SENTINEL,
 )
 from pydantic import model_serializer
-from typing import List
+from typing import List, Optional
 from typing_extensions import NotRequired, TypedDict
 
 
@@ -32,7 +32,6 @@ class PermitDetailTypedDict(TypedDict):
     date_issued: Nullable[date]
     date_completed: Nullable[date]
     date_expired: Nullable[date]
-    fee_amount: Nullable[float]
     stories: Nullable[int]
     units: Nullable[int]
     square_footage: Nullable[float]
@@ -43,6 +42,9 @@ class PermitDetailTypedDict(TypedDict):
     latitude: NotRequired[Nullable[float]]
     longitude: NotRequired[Nullable[float]]
     enrichment: NotRequired[Nullable[PermitEnrichmentTypedDict]]
+    record_kind: NotRequired[str]
+    fee_amount: NotRequired[Nullable[float]]
+    r"""Permit/inspection fee. Frequently null — most open-data feeds do not publish fee data."""
     contractor_license: NotRequired[Nullable[str]]
     created_at: NotRequired[Nullable[str]]
 
@@ -80,8 +82,6 @@ class PermitDetail(BaseModel):
 
     date_expired: Nullable[date]
 
-    fee_amount: Nullable[float]
-
     stories: Nullable[int]
 
     units: Nullable[int]
@@ -102,6 +102,11 @@ class PermitDetail(BaseModel):
 
     enrichment: OptionalNullable[PermitEnrichment] = UNSET
 
+    record_kind: Optional[str] = "permit"
+
+    fee_amount: OptionalNullable[float] = UNSET
+    r"""Permit/inspection fee. Frequently null — most open-data feeds do not publish fee data."""
+
     contractor_license: OptionalNullable[str] = UNSET
 
     created_at: OptionalNullable[str] = UNSET
@@ -115,6 +120,8 @@ class PermitDetail(BaseModel):
                 "latitude",
                 "longitude",
                 "enrichment",
+                "record_kind",
+                "fee_amount",
                 "contractor_license",
                 "created_at",
             ]

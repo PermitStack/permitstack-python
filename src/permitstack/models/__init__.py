@@ -5,12 +5,17 @@ from typing import Any, TYPE_CHECKING
 from permitstack.utils.dynamic_imports import lazy_getattr, lazy_dir
 
 if TYPE_CHECKING:
+    from .battery_retrofit_candidatesop import (
+        BatteryRetrofitCandidatesRequest,
+        BatteryRetrofitCandidatesRequestTypedDict,
+    )
     from .contractorprofile import ContractorProfile, ContractorProfileTypedDict
     from .contractorsearchresponse import (
         ContractorSearchResponse,
         ContractorSearchResponseTypedDict,
     )
     from .contractorsummary import ContractorSummary, ContractorSummaryTypedDict
+    from .coverageconfidence import CoverageConfidence, CoverageConfidenceTypedDict
     from .delete_webhookop import DeleteWebhookRequest, DeleteWebhookRequestTypedDict
     from .export_permitsop import ExportPermitsRequest, ExportPermitsRequestTypedDict
     from .get_contractor_permitsop import (
@@ -23,6 +28,10 @@ if TYPE_CHECKING:
         GetPermitsByAddressRequest,
         GetPermitsByAddressRequestTypedDict,
     )
+    from .get_property_by_parcelop import (
+        GetPropertyByParcelRequest,
+        GetPropertyByParcelRequestTypedDict,
+    )
     from .get_property_historyop import (
         GetPropertyHistoryRequest,
         GetPropertyHistoryRequestTypedDict,
@@ -31,14 +40,31 @@ if TYPE_CHECKING:
         GetWebhookSecretRequest,
         GetWebhookSecretRequestTypedDict,
     )
+    from .list_permit_eventsop import (
+        ListPermitEventsRequest,
+        ListPermitEventsRequestTypedDict,
+    )
+    from .orphan_recoveryop import OrphanRecoveryRequest, OrphanRecoveryRequestTypedDict
     from .permitdetail import PermitDetail, PermitDetailTypedDict
     from .permitenrichment import PermitEnrichment, PermitEnrichmentTypedDict
+    from .permiteventout import PermitEventOut, PermitEventOutTypedDict
+    from .permiteventsresponse import (
+        PermitEventsResponse,
+        PermitEventsResponseTypedDict,
+    )
     from .permitsearchresponse import (
         PermitSearchResponse,
         PermitSearchResponseTypedDict,
     )
     from .permitstatus import PermitStatus
     from .permitsummary import PermitSummary, PermitSummaryTypedDict
+    from .propertyhistoryresponse import (
+        PropertyHistoryResponse,
+        PropertyHistoryResponseTypedDict,
+    )
+    from .propertyquery import PropertyQuery, PropertyQueryTypedDict
+    from .propertysignals import PropertySignals, PropertySignalsTypedDict
+    from .propertysummary import PropertySummary, PropertySummaryTypedDict
     from .propertytype import PropertyType
     from .search_contractorsop import (
         SearchContractorsRequest,
@@ -58,6 +84,8 @@ if TYPE_CHECKING:
     from .webhookcreate import WebhookCreate, WebhookCreateTypedDict
 
 __all__ = [
+    "BatteryRetrofitCandidatesRequest",
+    "BatteryRetrofitCandidatesRequestTypedDict",
     "Context",
     "ContextTypedDict",
     "ContractorProfile",
@@ -66,6 +94,8 @@ __all__ = [
     "ContractorSearchResponseTypedDict",
     "ContractorSummary",
     "ContractorSummaryTypedDict",
+    "CoverageConfidence",
+    "CoverageConfidenceTypedDict",
     "DeleteWebhookRequest",
     "DeleteWebhookRequestTypedDict",
     "ExportPermitsRequest",
@@ -78,21 +108,39 @@ __all__ = [
     "GetPermitRequestTypedDict",
     "GetPermitsByAddressRequest",
     "GetPermitsByAddressRequestTypedDict",
+    "GetPropertyByParcelRequest",
+    "GetPropertyByParcelRequestTypedDict",
     "GetPropertyHistoryRequest",
     "GetPropertyHistoryRequestTypedDict",
     "GetWebhookSecretRequest",
     "GetWebhookSecretRequestTypedDict",
+    "ListPermitEventsRequest",
+    "ListPermitEventsRequestTypedDict",
     "Loc",
     "LocTypedDict",
+    "OrphanRecoveryRequest",
+    "OrphanRecoveryRequestTypedDict",
     "PermitDetail",
     "PermitDetailTypedDict",
     "PermitEnrichment",
     "PermitEnrichmentTypedDict",
+    "PermitEventOut",
+    "PermitEventOutTypedDict",
+    "PermitEventsResponse",
+    "PermitEventsResponseTypedDict",
     "PermitSearchResponse",
     "PermitSearchResponseTypedDict",
     "PermitStatus",
     "PermitSummary",
     "PermitSummaryTypedDict",
+    "PropertyHistoryResponse",
+    "PropertyHistoryResponseTypedDict",
+    "PropertyQuery",
+    "PropertyQueryTypedDict",
+    "PropertySignals",
+    "PropertySignalsTypedDict",
+    "PropertySummary",
+    "PropertySummaryTypedDict",
     "PropertyType",
     "SearchContractorsRequest",
     "SearchContractorsRequestTypedDict",
@@ -109,12 +157,16 @@ __all__ = [
 ]
 
 _dynamic_imports: dict[str, str] = {
+    "BatteryRetrofitCandidatesRequest": ".battery_retrofit_candidatesop",
+    "BatteryRetrofitCandidatesRequestTypedDict": ".battery_retrofit_candidatesop",
     "ContractorProfile": ".contractorprofile",
     "ContractorProfileTypedDict": ".contractorprofile",
     "ContractorSearchResponse": ".contractorsearchresponse",
     "ContractorSearchResponseTypedDict": ".contractorsearchresponse",
     "ContractorSummary": ".contractorsummary",
     "ContractorSummaryTypedDict": ".contractorsummary",
+    "CoverageConfidence": ".coverageconfidence",
+    "CoverageConfidenceTypedDict": ".coverageconfidence",
     "DeleteWebhookRequest": ".delete_webhookop",
     "DeleteWebhookRequestTypedDict": ".delete_webhookop",
     "ExportPermitsRequest": ".export_permitsop",
@@ -127,19 +179,37 @@ _dynamic_imports: dict[str, str] = {
     "GetPermitRequestTypedDict": ".get_permitop",
     "GetPermitsByAddressRequest": ".get_permits_by_addressop",
     "GetPermitsByAddressRequestTypedDict": ".get_permits_by_addressop",
+    "GetPropertyByParcelRequest": ".get_property_by_parcelop",
+    "GetPropertyByParcelRequestTypedDict": ".get_property_by_parcelop",
     "GetPropertyHistoryRequest": ".get_property_historyop",
     "GetPropertyHistoryRequestTypedDict": ".get_property_historyop",
     "GetWebhookSecretRequest": ".get_webhook_secretop",
     "GetWebhookSecretRequestTypedDict": ".get_webhook_secretop",
+    "ListPermitEventsRequest": ".list_permit_eventsop",
+    "ListPermitEventsRequestTypedDict": ".list_permit_eventsop",
+    "OrphanRecoveryRequest": ".orphan_recoveryop",
+    "OrphanRecoveryRequestTypedDict": ".orphan_recoveryop",
     "PermitDetail": ".permitdetail",
     "PermitDetailTypedDict": ".permitdetail",
     "PermitEnrichment": ".permitenrichment",
     "PermitEnrichmentTypedDict": ".permitenrichment",
+    "PermitEventOut": ".permiteventout",
+    "PermitEventOutTypedDict": ".permiteventout",
+    "PermitEventsResponse": ".permiteventsresponse",
+    "PermitEventsResponseTypedDict": ".permiteventsresponse",
     "PermitSearchResponse": ".permitsearchresponse",
     "PermitSearchResponseTypedDict": ".permitsearchresponse",
     "PermitStatus": ".permitstatus",
     "PermitSummary": ".permitsummary",
     "PermitSummaryTypedDict": ".permitsummary",
+    "PropertyHistoryResponse": ".propertyhistoryresponse",
+    "PropertyHistoryResponseTypedDict": ".propertyhistoryresponse",
+    "PropertyQuery": ".propertyquery",
+    "PropertyQueryTypedDict": ".propertyquery",
+    "PropertySignals": ".propertysignals",
+    "PropertySignalsTypedDict": ".propertysignals",
+    "PropertySummary": ".propertysummary",
+    "PropertySummaryTypedDict": ".propertysummary",
     "PropertyType": ".propertytype",
     "SearchContractorsRequest": ".search_contractorsop",
     "SearchContractorsRequestTypedDict": ".search_contractorsop",

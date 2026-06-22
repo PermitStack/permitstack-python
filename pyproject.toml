@@ -1,6 +1,6 @@
 [project]
 name = "permitstack"
-version = "1.1.0"
+version = "1.1.2"
 description = "Official Python SDK for the PermitStack building permit data API."
 authors = [{ name = "PermitStack" },]
 readme = "README.md"

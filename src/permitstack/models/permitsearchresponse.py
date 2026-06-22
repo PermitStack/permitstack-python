@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 from .permitsummary import PermitSummary, PermitSummaryTypedDict
-from permitstack.types import BaseModel
-from typing import List
-from typing_extensions import TypedDict
+from permitstack.types import BaseModel, UNSET_SENTINEL
+from pydantic import model_serializer
+from typing import List, Optional
+from typing_extensions import NotRequired, TypedDict
 
 
 class PermitSearchResponseTypedDict(TypedDict):
@@ -12,6 +13,7 @@ class PermitSearchResponseTypedDict(TypedDict):
     page: int
     per_page: int
     results: List[PermitSummaryTypedDict]
+    total_capped: NotRequired[bool]
 
 
 class PermitSearchResponse(BaseModel):
@@ -22,3 +24,21 @@ class PermitSearchResponse(BaseModel):
     per_page: int
 
     results: List[PermitSummary]
+
+    total_capped: Optional[bool] = False
+
+    @model_serializer(mode="wrap")
+    def serialize_model(self, handler):
+        optional_fields = set(["total_capped"])
+        serialized = handler(self)
+        m = {}
+
+        for n, f in type(self).model_fields.items():
+            k = f.alias or n
+            val = serialized.get(k, serialized.get(n))
+
+            if val != UNSET_SENTINEL:
+                if val is not None or k not in optional_fields:
+                    m[k] = val
+
+        return m

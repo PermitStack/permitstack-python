@@ -2,10 +2,16 @@
 
 from __future__ import annotations
 from datetime import date
-from permitstack.types import BaseModel, Nullable, UNSET_SENTINEL
+from permitstack.types import (
+    BaseModel,
+    Nullable,
+    OptionalNullable,
+    UNSET,
+    UNSET_SENTINEL,
+)
 from pydantic import model_serializer
 from typing import List
-from typing_extensions import TypedDict
+from typing_extensions import NotRequired, TypedDict
 
 
 class ContractorSummaryTypedDict(TypedDict):
@@ -19,6 +25,8 @@ class ContractorSummaryTypedDict(TypedDict):
     first_permit_date: Nullable[date]
     last_permit_date: Nullable[date]
     specialties: Nullable[List[str]]
+    score: NotRequired[Nullable[int]]
+    is_business: NotRequired[Nullable[bool]]
 
 
 class ContractorSummary(BaseModel):
@@ -42,16 +50,43 @@ class ContractorSummary(BaseModel):
 
     specialties: Nullable[List[str]]
 
+    score: OptionalNullable[int] = UNSET
+
+    is_business: OptionalNullable[bool] = UNSET
+
     @model_serializer(mode="wrap")
     def serialize_model(self, handler):
+        optional_fields = set(["score", "is_business"])
+        nullable_fields = set(
+            [
+                "license_number",
+                "license_state",
+                "city",
+                "state",
+                "first_permit_date",
+                "last_permit_date",
+                "specialties",
+                "score",
+                "is_business",
+            ]
+        )
         serialized = handler(self)
         m = {}
 
         for n, f in type(self).model_fields.items():
             k = f.alias or n
             val = serialized.get(k, serialized.get(n))
+            is_nullable_and_explicitly_set = (
+                k in nullable_fields
+                and (self.__pydantic_fields_set__.intersection({n}))  # pylint: disable=no-member
+            )
 
             if val != UNSET_SENTINEL:
-                m[k] = val
+                if (
+                    val is not None
+                    or k not in optional_fields
+                    or is_nullable_and_explicitly_set
+                ):
+                    m[k] = val
 
         return m

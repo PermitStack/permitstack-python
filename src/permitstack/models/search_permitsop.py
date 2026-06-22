@@ -26,12 +26,18 @@ class SearchPermitsRequestTypedDict(TypedDict):
     r"""2-letter state code"""
     jurisdiction: NotRequired[Nullable[str]]
     r"""Jurisdiction name (e.g. 'Wake County', 'Tacoma') or partial match"""
+    address: NotRequired[Nullable[str]]
+    r"""Street address, partial + case-insensitive (e.g. '1600 Pennsylvania') — indexed, fast"""
     lat: NotRequired[Nullable[float]]
     r"""Latitude for radius search"""
     lng: NotRequired[Nullable[float]]
     r"""Longitude for radius search"""
     radius_miles: NotRequired[float]
     r"""Radius in miles (used with lat/lng)"""
+    bbox: NotRequired[Nullable[str]]
+    r"""Map-viewport bounding box 'minLng,minLat,maxLng,maxLat'. Returns permits whose location falls inside the box (geocoded permits only)."""
+    polygon: NotRequired[Nullable[str]]
+    r"""A drawn area as a GeoJSON Polygon geometry (URL-encoded), e.g. {\"type\":\"Polygon\",\"coordinates\":[[[lng,lat],...]]}. Returns permits inside the polygon (geocoded permits only)."""
     category: NotRequired[Nullable[str]]
     r"""Permit category (e.g. solar, SOLAR, roofing, hvac — case insensitive)"""
     status: NotRequired[Nullable[PermitStatus]]
@@ -50,12 +56,28 @@ class SearchPermitsRequestTypedDict(TypedDict):
     r"""Issued on or after this date"""
     issued_before: NotRequired[Nullable[date]]
     r"""Issued on or before this date"""
+    date_after: NotRequired[Nullable[date]]
+    r"""On or after this date, matched against whichever date a record has (issued, else filed). Use this when a source populates only one of issued/filed — e.g. issued-only feeds vs filed-only feeds."""
+    date_before: NotRequired[Nullable[date]]
+    r"""On or before this date, matched against whichever date a record has (issued, else filed)."""
+    parcel: NotRequired[Nullable[str]]
+    r"""Parcel number / APN / folio (formatting ignored). Returns permits on that parcel where the source publishes one."""
     min_value: NotRequired[Nullable[float]]
     r"""Minimum estimated value"""
     max_value: NotRequired[Nullable[float]]
     r"""Maximum estimated value"""
+    min_solar_kw: NotRequired[Nullable[float]]
+    r"""Minimum extracted solar system size (kW DC)"""
+    max_solar_kw: NotRequired[Nullable[float]]
+    r"""Maximum extracted solar system size (kW DC)"""
+    min_sqft: NotRequired[Nullable[float]]
+    r"""Minimum square footage mentioned (from enrichment)"""
+    has_enrichment: NotRequired[Nullable[bool]]
+    r"""Only permits that have (true) or lack (false) LLM enrichment"""
+    scope: NotRequired[Nullable[str]]
+    r"""Substring match on the enriched work scope"""
     q: NotRequired[Nullable[str]]
-    r"""Full-text search query"""
+    r"""Case-insensitive substring match across description, address, and permit number"""
     contractor_name: NotRequired[Nullable[str]]
     r"""Contractor name (partial match)"""
     page: NotRequired[int]
@@ -87,6 +109,12 @@ class SearchPermitsRequest(BaseModel):
     ] = UNSET
     r"""Jurisdiction name (e.g. 'Wake County', 'Tacoma') or partial match"""
 
+    address: Annotated[
+        OptionalNullable[str],
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+    r"""Street address, partial + case-insensitive (e.g. '1600 Pennsylvania') — indexed, fast"""
+
     lat: Annotated[
         OptionalNullable[float],
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
@@ -104,6 +132,18 @@ class SearchPermitsRequest(BaseModel):
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
     ] = 5
     r"""Radius in miles (used with lat/lng)"""
+
+    bbox: Annotated[
+        OptionalNullable[str],
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+    r"""Map-viewport bounding box 'minLng,minLat,maxLng,maxLat'. Returns permits whose location falls inside the box (geocoded permits only)."""
+
+    polygon: Annotated[
+        OptionalNullable[str],
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+    r"""A drawn area as a GeoJSON Polygon geometry (URL-encoded), e.g. {\"type\":\"Polygon\",\"coordinates\":[[[lng,lat],...]]}. Returns permits inside the polygon (geocoded permits only)."""
 
     category: Annotated[
         OptionalNullable[str],
@@ -159,6 +199,24 @@ class SearchPermitsRequest(BaseModel):
     ] = UNSET
     r"""Issued on or before this date"""
 
+    date_after: Annotated[
+        OptionalNullable[date],
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+    r"""On or after this date, matched against whichever date a record has (issued, else filed). Use this when a source populates only one of issued/filed — e.g. issued-only feeds vs filed-only feeds."""
+
+    date_before: Annotated[
+        OptionalNullable[date],
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+    r"""On or before this date, matched against whichever date a record has (issued, else filed)."""
+
+    parcel: Annotated[
+        OptionalNullable[str],
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+    r"""Parcel number / APN / folio (formatting ignored). Returns permits on that parcel where the source publishes one."""
+
     min_value: Annotated[
         OptionalNullable[float],
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
@@ -171,11 +229,41 @@ class SearchPermitsRequest(BaseModel):
     ] = UNSET
     r"""Maximum estimated value"""
 
+    min_solar_kw: Annotated[
+        OptionalNullable[float],
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+    r"""Minimum extracted solar system size (kW DC)"""
+
+    max_solar_kw: Annotated[
+        OptionalNullable[float],
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+    r"""Maximum extracted solar system size (kW DC)"""
+
+    min_sqft: Annotated[
+        OptionalNullable[float],
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+    r"""Minimum square footage mentioned (from enrichment)"""
+
+    has_enrichment: Annotated[
+        OptionalNullable[bool],
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+    r"""Only permits that have (true) or lack (false) LLM enrichment"""
+
+    scope: Annotated[
+        OptionalNullable[str],
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+    r"""Substring match on the enriched work scope"""
+
     q: Annotated[
         OptionalNullable[str],
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
     ] = UNSET
-    r"""Full-text search query"""
+    r"""Case-insensitive substring match across description, address, and permit number"""
 
     contractor_name: Annotated[
         OptionalNullable[str],
@@ -201,9 +289,12 @@ class SearchPermitsRequest(BaseModel):
                 "city",
                 "state",
                 "jurisdiction",
+                "address",
                 "lat",
                 "lng",
                 "radius_miles",
+                "bbox",
+                "polygon",
                 "category",
                 "status",
                 "property_type",
@@ -213,8 +304,16 @@ class SearchPermitsRequest(BaseModel):
                 "filed_before",
                 "issued_after",
                 "issued_before",
+                "date_after",
+                "date_before",
+                "parcel",
                 "min_value",
                 "max_value",
+                "min_solar_kw",
+                "max_solar_kw",
+                "min_sqft",
+                "has_enrichment",
+                "scope",
                 "q",
                 "contractor_name",
                 "page",
@@ -227,8 +326,11 @@ class SearchPermitsRequest(BaseModel):
                 "city",
                 "state",
                 "jurisdiction",
+                "address",
                 "lat",
                 "lng",
+                "bbox",
+                "polygon",
                 "category",
                 "status",
                 "property_type",
@@ -237,8 +339,16 @@ class SearchPermitsRequest(BaseModel):
                 "filed_before",
                 "issued_after",
                 "issued_before",
+                "date_after",
+                "date_before",
+                "parcel",
                 "min_value",
                 "max_value",
+                "min_solar_kw",
+                "max_solar_kw",
+                "min_sqft",
+                "has_enrichment",
+                "scope",
                 "q",
                 "contractor_name",
             ]
