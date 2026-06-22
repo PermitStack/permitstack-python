@@ -16,19 +16,36 @@ class PropertyHistory(BaseSDK):
         self,
         *,
         address: str,
+        city: OptionalNullable[str] = UNSET,
+        state: OptionalNullable[str] = UNSET,
+        zip: OptionalNullable[str] = UNSET,
+        page: Optional[int] = 1,
+        per_page: Optional[int] = 50,
         retries: OptionalNullable[utils.RetryConfig] = UNSET,
         server_url: Optional[str] = None,
         timeout_ms: Optional[int] = None,
         http_headers: Optional[Mapping[str, str]] = None,
-    ) -> Any:
+    ) -> models.PropertyHistoryResponse:
         r"""Get Property History
 
-        Get the complete construction history for a property address.
+        Complete construction history + property profile for an address.
 
-        Returns all permits ever filed at or near this address, sorted by date.
-        Useful for insurance underwriting, real estate due diligence, and property valuation.
+        Matches every permit whose street address contains the supplied address;
+        pass `city`/`state`/`zip` to disambiguate the same street number across
+        metros. Returns a derived profile (permit timeline, category breakdown,
+        contractors, and underwriting signals such as solar/roof/pool age) plus
+        the paginated permit records.
 
-        :param address: Street address to look up
+        An address with **no** permits returns `found: false` with an empty
+        profile (HTTP 200) — a clean property is a valid, useful answer, not an
+        error.
+
+        :param address: Street address to look up (e.g. '123 Main St')
+        :param city: Optional city to disambiguate identical street addresses
+        :param state: Optional 2-letter state code
+        :param zip: Optional ZIP (prefix-matched)
+        :param page:
+        :param per_page:
         :param retries: Override the default retry configuration for this method
         :param server_url: Override the default server URL for this method
         :param timeout_ms: Override the default request timeout configuration for this method in milliseconds
@@ -46,6 +63,11 @@ class PropertyHistory(BaseSDK):
 
         request = models.GetPropertyHistoryRequest(
             address=address,
+            city=city,
+            state=state,
+            zip=zip,
+            page=page,
+            per_page=per_page,
         )
 
         req = self._build_request(
@@ -90,7 +112,7 @@ class PropertyHistory(BaseSDK):
 
         response_data: Any = None
         if utils.match_response(http_res, "200", "application/json"):
-            return unmarshal_json_response(Any, http_res)
+            return unmarshal_json_response(models.PropertyHistoryResponse, http_res)
         if utils.match_response(http_res, "422", "application/json"):
             response_data = unmarshal_json_response(
                 errors.HTTPValidationErrorData, http_res
@@ -113,19 +135,36 @@ class PropertyHistory(BaseSDK):
         self,
         *,
         address: str,
+        city: OptionalNullable[str] = UNSET,
+        state: OptionalNullable[str] = UNSET,
+        zip: OptionalNullable[str] = UNSET,
+        page: Optional[int] = 1,
+        per_page: Optional[int] = 50,
         retries: OptionalNullable[utils.RetryConfig] = UNSET,
         server_url: Optional[str] = None,
         timeout_ms: Optional[int] = None,
         http_headers: Optional[Mapping[str, str]] = None,
-    ) -> Any:
+    ) -> models.PropertyHistoryResponse:
         r"""Get Property History
 
-        Get the complete construction history for a property address.
+        Complete construction history + property profile for an address.
 
-        Returns all permits ever filed at or near this address, sorted by date.
-        Useful for insurance underwriting, real estate due diligence, and property valuation.
+        Matches every permit whose street address contains the supplied address;
+        pass `city`/`state`/`zip` to disambiguate the same street number across
+        metros. Returns a derived profile (permit timeline, category breakdown,
+        contractors, and underwriting signals such as solar/roof/pool age) plus
+        the paginated permit records.
 
-        :param address: Street address to look up
+        An address with **no** permits returns `found: false` with an empty
+        profile (HTTP 200) — a clean property is a valid, useful answer, not an
+        error.
+
+        :param address: Street address to look up (e.g. '123 Main St')
+        :param city: Optional city to disambiguate identical street addresses
+        :param state: Optional 2-letter state code
+        :param zip: Optional ZIP (prefix-matched)
+        :param page:
+        :param per_page:
         :param retries: Override the default retry configuration for this method
         :param server_url: Override the default server URL for this method
         :param timeout_ms: Override the default request timeout configuration for this method in milliseconds
@@ -143,6 +182,11 @@ class PropertyHistory(BaseSDK):
 
         request = models.GetPropertyHistoryRequest(
             address=address,
+            city=city,
+            state=state,
+            zip=zip,
+            page=page,
+            per_page=per_page,
         )
 
         req = self._build_request_async(
@@ -187,7 +231,237 @@ class PropertyHistory(BaseSDK):
 
         response_data: Any = None
         if utils.match_response(http_res, "200", "application/json"):
-            return unmarshal_json_response(Any, http_res)
+            return unmarshal_json_response(models.PropertyHistoryResponse, http_res)
+        if utils.match_response(http_res, "422", "application/json"):
+            response_data = unmarshal_json_response(
+                errors.HTTPValidationErrorData, http_res
+            )
+            raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, "4XX", "*"):
+            http_res_text = await utils.stream_to_text_async(http_res)
+            raise errors.PermitstackDefaultError(
+                "API error occurred", http_res, http_res_text
+            )
+        if utils.match_response(http_res, "5XX", "*"):
+            http_res_text = await utils.stream_to_text_async(http_res)
+            raise errors.PermitstackDefaultError(
+                "API error occurred", http_res, http_res_text
+            )
+
+        raise errors.PermitstackDefaultError("Unexpected response received", http_res)
+
+    def get_property_by_parcel(
+        self,
+        *,
+        parcel: str,
+        state: OptionalNullable[str] = UNSET,
+        page: Optional[int] = 1,
+        per_page: Optional[int] = 50,
+        retries: OptionalNullable[utils.RetryConfig] = UNSET,
+        server_url: Optional[str] = None,
+        timeout_ms: Optional[int] = None,
+        http_headers: Optional[Mapping[str, str]] = None,
+    ) -> models.PropertyHistoryResponse:
+        r"""Get Property By Parcel
+
+        Complete construction history + property profile for a parcel / APN.
+
+        Looks up every permit whose source parcel number matches `parcel`, with
+        formatting ignored, so an APN from a county appraiser matches regardless of how
+        the permit feed punctuates it. Pass `state` to disambiguate the same parcel
+        number used by different counties. Returns the same profile shape as /history
+        (timeline, category breakdown, contractors, and roof/solar/HVAC age signals).
+
+        Parcel coverage spans the county / appraiser / GIS sources that publish a parcel
+        id; a handful of Accela-sourced jurisdictions omit parcel in their public export
+        and won't match here (use /property/history by address for those).
+
+        A parcel with **no** permits returns `found: false` (HTTP 200), not an error.
+
+        :param parcel: Parcel number / APN / folio. Formatting is ignored — dashes, dots and spaces are stripped before matching.
+        :param state: Optional 2-letter state to disambiguate the same parcel number across counties
+        :param page:
+        :param per_page:
+        :param retries: Override the default retry configuration for this method
+        :param server_url: Override the default server URL for this method
+        :param timeout_ms: Override the default request timeout configuration for this method in milliseconds
+        :param http_headers: Additional headers to set or replace on requests.
+        """
+        base_url = None
+        url_variables = None
+        if timeout_ms is None:
+            timeout_ms = self.sdk_configuration.timeout_ms
+
+        if server_url is not None:
+            base_url = server_url
+        else:
+            base_url = self._get_url(base_url, url_variables)
+
+        request = models.GetPropertyByParcelRequest(
+            parcel=parcel,
+            state=state,
+            page=page,
+            per_page=per_page,
+        )
+
+        req = self._build_request(
+            method="GET",
+            path="/v1/property/by-parcel",
+            base_url=base_url,
+            url_variables=url_variables,
+            request=request,
+            request_body_required=False,
+            request_has_path_params=False,
+            request_has_query_params=True,
+            user_agent_header="user-agent",
+            accept_header_value="application/json",
+            http_headers=http_headers,
+            security=self.sdk_configuration.security,
+            allow_empty_value=None,
+            timeout_ms=timeout_ms,
+        )
+
+        if retries == UNSET:
+            if self.sdk_configuration.retry_config is not UNSET:
+                retries = self.sdk_configuration.retry_config
+
+        retry_config = None
+        if isinstance(retries, utils.RetryConfig):
+            retry_config = (retries, ["429", "500", "502", "503", "504"])
+
+        http_res = self.do_request(
+            hook_ctx=HookContext(
+                config=self.sdk_configuration,
+                base_url=base_url or "",
+                operation_id="get_property_by_parcel",
+                oauth2_scopes=None,
+                security_source=get_security_from_env(
+                    self.sdk_configuration.security, models.Security
+                ),
+            ),
+            request=req,
+            is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
+            retry_config=retry_config,
+        )
+
+        response_data: Any = None
+        if utils.match_response(http_res, "200", "application/json"):
+            return unmarshal_json_response(models.PropertyHistoryResponse, http_res)
+        if utils.match_response(http_res, "422", "application/json"):
+            response_data = unmarshal_json_response(
+                errors.HTTPValidationErrorData, http_res
+            )
+            raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, "4XX", "*"):
+            http_res_text = utils.stream_to_text(http_res)
+            raise errors.PermitstackDefaultError(
+                "API error occurred", http_res, http_res_text
+            )
+        if utils.match_response(http_res, "5XX", "*"):
+            http_res_text = utils.stream_to_text(http_res)
+            raise errors.PermitstackDefaultError(
+                "API error occurred", http_res, http_res_text
+            )
+
+        raise errors.PermitstackDefaultError("Unexpected response received", http_res)
+
+    async def get_property_by_parcel_async(
+        self,
+        *,
+        parcel: str,
+        state: OptionalNullable[str] = UNSET,
+        page: Optional[int] = 1,
+        per_page: Optional[int] = 50,
+        retries: OptionalNullable[utils.RetryConfig] = UNSET,
+        server_url: Optional[str] = None,
+        timeout_ms: Optional[int] = None,
+        http_headers: Optional[Mapping[str, str]] = None,
+    ) -> models.PropertyHistoryResponse:
+        r"""Get Property By Parcel
+
+        Complete construction history + property profile for a parcel / APN.
+
+        Looks up every permit whose source parcel number matches `parcel`, with
+        formatting ignored, so an APN from a county appraiser matches regardless of how
+        the permit feed punctuates it. Pass `state` to disambiguate the same parcel
+        number used by different counties. Returns the same profile shape as /history
+        (timeline, category breakdown, contractors, and roof/solar/HVAC age signals).
+
+        Parcel coverage spans the county / appraiser / GIS sources that publish a parcel
+        id; a handful of Accela-sourced jurisdictions omit parcel in their public export
+        and won't match here (use /property/history by address for those).
+
+        A parcel with **no** permits returns `found: false` (HTTP 200), not an error.
+
+        :param parcel: Parcel number / APN / folio. Formatting is ignored — dashes, dots and spaces are stripped before matching.
+        :param state: Optional 2-letter state to disambiguate the same parcel number across counties
+        :param page:
+        :param per_page:
+        :param retries: Override the default retry configuration for this method
+        :param server_url: Override the default server URL for this method
+        :param timeout_ms: Override the default request timeout configuration for this method in milliseconds
+        :param http_headers: Additional headers to set or replace on requests.
+        """
+        base_url = None
+        url_variables = None
+        if timeout_ms is None:
+            timeout_ms = self.sdk_configuration.timeout_ms
+
+        if server_url is not None:
+            base_url = server_url
+        else:
+            base_url = self._get_url(base_url, url_variables)
+
+        request = models.GetPropertyByParcelRequest(
+            parcel=parcel,
+            state=state,
+            page=page,
+            per_page=per_page,
+        )
+
+        req = self._build_request_async(
+            method="GET",
+            path="/v1/property/by-parcel",
+            base_url=base_url,
+            url_variables=url_variables,
+            request=request,
+            request_body_required=False,
+            request_has_path_params=False,
+            request_has_query_params=True,
+            user_agent_header="user-agent",
+            accept_header_value="application/json",
+            http_headers=http_headers,
+            security=self.sdk_configuration.security,
+            allow_empty_value=None,
+            timeout_ms=timeout_ms,
+        )
+
+        if retries == UNSET:
+            if self.sdk_configuration.retry_config is not UNSET:
+                retries = self.sdk_configuration.retry_config
+
+        retry_config = None
+        if isinstance(retries, utils.RetryConfig):
+            retry_config = (retries, ["429", "500", "502", "503", "504"])
+
+        http_res = await self.do_request_async(
+            hook_ctx=HookContext(
+                config=self.sdk_configuration,
+                base_url=base_url or "",
+                operation_id="get_property_by_parcel",
+                oauth2_scopes=None,
+                security_source=get_security_from_env(
+                    self.sdk_configuration.security, models.Security
+                ),
+            ),
+            request=req,
+            is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
+            retry_config=retry_config,
+        )
+
+        response_data: Any = None
+        if utils.match_response(http_res, "200", "application/json"):
+            return unmarshal_json_response(models.PropertyHistoryResponse, http_res)
         if utils.match_response(http_res, "422", "application/json"):
             response_data = unmarshal_json_response(
                 errors.HTTPValidationErrorData, http_res

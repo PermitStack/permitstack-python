@@ -20,6 +20,8 @@ class Contractors(BaseSDK):
         city: OptionalNullable[str] = UNSET,
         specialty: OptionalNullable[str] = UNSET,
         min_permits: OptionalNullable[int] = UNSET,
+        min_score: OptionalNullable[int] = UNSET,
+        sort: Optional[str] = "score",
         page: Optional[int] = 1,
         per_page: Optional[int] = 25,
         retries: OptionalNullable[utils.RetryConfig] = UNSET,
@@ -29,13 +31,15 @@ class Contractors(BaseSDK):
     ) -> models.ContractorSearchResponse:
         r"""Search Contractors
 
-        Search contractors by name, location, or specialty.
+        Search contractors by name, location, or specialty, ranked by activity score.
 
         :param name: Contractor name (partial match)
         :param state: 2-letter state code
         :param city: City name
         :param specialty: Specialty tag (e.g. solar, roofing, hvac)
         :param min_permits: Minimum total permits
+        :param min_score: Minimum contractor activity score (0-100)
+        :param sort: Sort order: 'score' (default), 'permits', or 'recent'
         :param page:
         :param per_page:
         :param retries: Override the default retry configuration for this method
@@ -59,6 +63,8 @@ class Contractors(BaseSDK):
             city=city,
             specialty=specialty,
             min_permits=min_permits,
+            min_score=min_score,
+            sort=sort,
             page=page,
             per_page=per_page,
         )
@@ -132,6 +138,8 @@ class Contractors(BaseSDK):
         city: OptionalNullable[str] = UNSET,
         specialty: OptionalNullable[str] = UNSET,
         min_permits: OptionalNullable[int] = UNSET,
+        min_score: OptionalNullable[int] = UNSET,
+        sort: Optional[str] = "score",
         page: Optional[int] = 1,
         per_page: Optional[int] = 25,
         retries: OptionalNullable[utils.RetryConfig] = UNSET,
@@ -141,13 +149,15 @@ class Contractors(BaseSDK):
     ) -> models.ContractorSearchResponse:
         r"""Search Contractors
 
-        Search contractors by name, location, or specialty.
+        Search contractors by name, location, or specialty, ranked by activity score.
 
         :param name: Contractor name (partial match)
         :param state: 2-letter state code
         :param city: City name
         :param specialty: Specialty tag (e.g. solar, roofing, hvac)
         :param min_permits: Minimum total permits
+        :param min_score: Minimum contractor activity score (0-100)
+        :param sort: Sort order: 'score' (default), 'permits', or 'recent'
         :param page:
         :param per_page:
         :param retries: Override the default retry configuration for this method
@@ -171,6 +181,8 @@ class Contractors(BaseSDK):
             city=city,
             specialty=specialty,
             min_permits=min_permits,
+            min_score=min_score,
+            sort=sort,
             page=page,
             per_page=per_page,
         )

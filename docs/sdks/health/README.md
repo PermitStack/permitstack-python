@@ -52,7 +52,7 @@ with Permitstack(
 
 Public stats endpoint — no auth required.
 Returns aggregate coverage numbers for marketing/transparency.
-Cached server-side for 5 minutes.
+Cached server-side for 30 minutes.
 
 ### Example Usage
 

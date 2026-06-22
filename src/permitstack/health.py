@@ -182,7 +182,7 @@ class Health(BaseSDK):
 
         Public stats endpoint — no auth required.
         Returns aggregate coverage numbers for marketing/transparency.
-        Cached server-side for 5 minutes.
+        Cached server-side for 30 minutes.
 
         :param retries: Override the default retry configuration for this method
         :param server_url: Override the default server URL for this method
@@ -265,7 +265,7 @@ class Health(BaseSDK):
 
         Public stats endpoint — no auth required.
         Returns aggregate coverage numbers for marketing/transparency.
-        Cached server-side for 5 minutes.
+        Cached server-side for 30 minutes.
 
         :param retries: Override the default retry configuration for this method
         :param server_url: Override the default server URL for this method

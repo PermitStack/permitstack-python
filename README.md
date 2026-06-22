@@ -13,7 +13,7 @@ Developer-friendly & type-safe Python SDK specifically catered to leverage *perm
 PermitStack: 
 ## PermitStack Building Permit API
 
-Access 39M+ building permits across 171 active U.S. jurisdictions (plus 19 historical archives), updated daily from official open data portals.
+Access 58M+ building permits across 552 active U.S. jurisdictions (plus 51 historical archives), updated daily from official open data portals.
 
 ### Getting started
 1. Sign up at [permit-stack.com](https://permit-stack.com/#pricing) for a free API key (100 req/day)
@@ -232,13 +232,18 @@ with Permitstack(
 
 * [search_permits](docs/sdks/permits/README.md#search_permits) - Search Permits
 * [export_permits](docs/sdks/permits/README.md#export_permits) - Export Permits
+* [list_permit_events](docs/sdks/permits/README.md#list_permit_events) - List Permit Events
 * [get_permit](docs/sdks/permits/README.md#get_permit) - Get Permit
 * [get_permits_by_address](docs/sdks/permits/README.md#get_permits_by_address) - Get Permits By Address
 * [get_coverage_stats](docs/sdks/permits/README.md#get_coverage_stats) - Get Coverage Stats
+* [list_plays](docs/sdks/permits/README.md#list_plays) - List Plays
+* [battery_retrofit_candidates](docs/sdks/permits/README.md#battery_retrofit_candidates) - Battery Retrofit Candidates
+* [orphan_recovery](docs/sdks/permits/README.md#orphan_recovery) - Orphan Recovery
 
 ### [PropertyHistory](docs/sdks/propertyhistory/README.md)
 
 * [get_property_history](docs/sdks/propertyhistory/README.md#get_property_history) - Get Property History
+* [get_property_by_parcel](docs/sdks/propertyhistory/README.md#get_property_by_parcel) - Get Property By Parcel
 
 ### [Webhooks](docs/sdks/webhooks/README.md)
 
@@ -355,7 +360,7 @@ with Permitstack(
 
 
 **Inherit from [`PermitstackError`](./src/permitstack/errors/permitstackerror.py)**:
-* [`HTTPValidationError`](./src/permitstack/errors/httpvalidationerror.py): Validation Error. Status code `422`. Applicable to 12 of 16 methods.*
+* [`HTTPValidationError`](./src/permitstack/errors/httpvalidationerror.py): Validation Error. Status code `422`. Applicable to 16 of 21 methods.*
 * [`ResponseValidationError`](./src/permitstack/errors/responsevalidationerror.py): Type mismatch between the response data and the expected Pydantic model. Provides access to the Pydantic validation error via the `cause` attribute.
 
 </details>

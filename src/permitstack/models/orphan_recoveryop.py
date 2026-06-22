@@ -14,31 +14,26 @@ from typing import Optional
 from typing_extensions import Annotated, NotRequired, TypedDict
 
 
-class SearchContractorsRequestTypedDict(TypedDict):
-    name: NotRequired[Nullable[str]]
-    r"""Contractor name (partial match)"""
+class OrphanRecoveryRequestTypedDict(TypedDict):
+    installer: str
+    r"""Installer name to match (contractor/applicant/owner)"""
     state: NotRequired[Nullable[str]]
     r"""2-letter state code"""
     city: NotRequired[Nullable[str]]
     r"""City name"""
-    specialty: NotRequired[Nullable[str]]
-    r"""Specialty tag (e.g. solar, roofing, hvac)"""
-    min_permits: NotRequired[Nullable[int]]
-    r"""Minimum total permits"""
-    min_score: NotRequired[Nullable[int]]
-    r"""Minimum contractor activity score (0-100)"""
-    sort: NotRequired[str]
-    r"""Sort order: 'score' (default), 'permits', or 'recent'"""
+    zip_code: NotRequired[Nullable[str]]
+    r"""5-digit ZIP"""
+    jurisdiction: NotRequired[Nullable[str]]
+    r"""Jurisdiction name (partial)"""
     page: NotRequired[int]
     per_page: NotRequired[int]
 
 
-class SearchContractorsRequest(BaseModel):
-    name: Annotated[
-        OptionalNullable[str],
-        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
-    ] = UNSET
-    r"""Contractor name (partial match)"""
+class OrphanRecoveryRequest(BaseModel):
+    installer: Annotated[
+        str, FieldMetadata(query=QueryParamMetadata(style="form", explode=True))
+    ]
+    r"""Installer name to match (contractor/applicant/owner)"""
 
     state: Annotated[
         OptionalNullable[str],
@@ -52,29 +47,17 @@ class SearchContractorsRequest(BaseModel):
     ] = UNSET
     r"""City name"""
 
-    specialty: Annotated[
+    zip_code: Annotated[
         OptionalNullable[str],
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
     ] = UNSET
-    r"""Specialty tag (e.g. solar, roofing, hvac)"""
+    r"""5-digit ZIP"""
 
-    min_permits: Annotated[
-        OptionalNullable[int],
+    jurisdiction: Annotated[
+        OptionalNullable[str],
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
     ] = UNSET
-    r"""Minimum total permits"""
-
-    min_score: Annotated[
-        OptionalNullable[int],
-        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
-    ] = UNSET
-    r"""Minimum contractor activity score (0-100)"""
-
-    sort: Annotated[
-        Optional[str],
-        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
-    ] = "score"
-    r"""Sort order: 'score' (default), 'permits', or 'recent'"""
+    r"""Jurisdiction name (partial)"""
 
     page: Annotated[
         Optional[int],
@@ -89,21 +72,9 @@ class SearchContractorsRequest(BaseModel):
     @model_serializer(mode="wrap")
     def serialize_model(self, handler):
         optional_fields = set(
-            [
-                "name",
-                "state",
-                "city",
-                "specialty",
-                "min_permits",
-                "min_score",
-                "sort",
-                "page",
-                "per_page",
-            ]
+            ["state", "city", "zip_code", "jurisdiction", "page", "per_page"]
         )
-        nullable_fields = set(
-            ["name", "state", "city", "specialty", "min_permits", "min_score"]
-        )
+        nullable_fields = set(["state", "city", "zip_code", "jurisdiction"])
         serialized = handler(self)
         m = {}
 

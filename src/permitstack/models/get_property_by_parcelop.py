@@ -14,42 +14,26 @@ from typing import Optional
 from typing_extensions import Annotated, NotRequired, TypedDict
 
 
-class GetPropertyHistoryRequestTypedDict(TypedDict):
-    address: str
-    r"""Street address to look up (e.g. '123 Main St')"""
-    city: NotRequired[Nullable[str]]
-    r"""Optional city to disambiguate identical street addresses"""
+class GetPropertyByParcelRequestTypedDict(TypedDict):
+    parcel: str
+    r"""Parcel number / APN / folio. Formatting is ignored — dashes, dots and spaces are stripped before matching."""
     state: NotRequired[Nullable[str]]
-    r"""Optional 2-letter state code"""
-    zip: NotRequired[Nullable[str]]
-    r"""Optional ZIP (prefix-matched)"""
+    r"""Optional 2-letter state to disambiguate the same parcel number across counties"""
     page: NotRequired[int]
     per_page: NotRequired[int]
 
 
-class GetPropertyHistoryRequest(BaseModel):
-    address: Annotated[
+class GetPropertyByParcelRequest(BaseModel):
+    parcel: Annotated[
         str, FieldMetadata(query=QueryParamMetadata(style="form", explode=True))
     ]
-    r"""Street address to look up (e.g. '123 Main St')"""
-
-    city: Annotated[
-        OptionalNullable[str],
-        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
-    ] = UNSET
-    r"""Optional city to disambiguate identical street addresses"""
+    r"""Parcel number / APN / folio. Formatting is ignored — dashes, dots and spaces are stripped before matching."""
 
     state: Annotated[
         OptionalNullable[str],
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
     ] = UNSET
-    r"""Optional 2-letter state code"""
-
-    zip: Annotated[
-        OptionalNullable[str],
-        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
-    ] = UNSET
-    r"""Optional ZIP (prefix-matched)"""
+    r"""Optional 2-letter state to disambiguate the same parcel number across counties"""
 
     page: Annotated[
         Optional[int],
@@ -63,8 +47,8 @@ class GetPropertyHistoryRequest(BaseModel):
 
     @model_serializer(mode="wrap")
     def serialize_model(self, handler):
-        optional_fields = set(["city", "state", "zip", "page", "per_page"])
-        nullable_fields = set(["city", "state", "zip"])
+        optional_fields = set(["state", "page", "per_page"])
+        nullable_fields = set(["state"])
         serialized = handler(self)
         m = {}
 
