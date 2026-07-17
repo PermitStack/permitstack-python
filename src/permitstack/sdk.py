@@ -26,7 +26,7 @@ class Permitstack(BaseSDK):
     r"""PermitStack:
     ## PermitStack Building Permit API
 
-    Access 62M+ building permits across 610 active U.S. jurisdictions (plus 62 historical archives), updated daily from official open data portals.
+    Access 69M+ building permits across 8,000+ U.S. cities in all 50 states (747 active data sources, plus 68 historical archives), updated daily from official open data portals.
 
     ### Getting started
     1. Sign up at [permit-stack.com](https://permit-stack.com/#pricing) for a free API key (100 req/day)
@@ -40,8 +40,8 @@ class Permitstack(BaseSDK):
     Indie      | 30           | 1,000
     Hobbyist   | 30           | 2,500
     Developer  | 60           | 10,000
-    Startup    | 200          | 100,000
-    Growth     | 500          | 500,000
+    Business   | 200          | 100,000
+    Enterprise | custom       | custom
 
     ### Support
     support@permit-stack.com

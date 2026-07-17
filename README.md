@@ -13,7 +13,7 @@ Developer-friendly & type-safe Python SDK specifically catered to leverage *perm
 PermitStack: 
 ## PermitStack Building Permit API
 
-Access 63M+ building permits across 7,000+ U.S. cities in all 50 states (615 active data sources spanning counties and statewide feeds, plus ~74 historical archives), updated daily from official open data portals.
+Access 69M+ building permits across 8,000+ U.S. cities in all 50 states (747 active data sources spanning counties and statewide feeds, plus 68 historical archives), updated daily from official open data portals.
 
 ### Getting started
 1. Sign up at [permit-stack.com](https://permit-stack.com/#pricing) for a free API key (100 req/day)
@@ -27,8 +27,8 @@ Free       | 30           | 100
 Indie      | 30           | 1,000
 Hobbyist   | 30           | 2,500
 Developer  | 60           | 10,000
-Business    | 200          | 100,000
-Growth     | 500          | 500,000
+Business   | 200          | 100,000
+Enterprise | custom       | custom
 
 ### Support
 support@permit-stack.com
@@ -75,7 +75,7 @@ The SDK can be installed with *uv*, *pip*, or *poetry* package managers.
 *uv* is a fast Python package installer and resolver, designed as a drop-in replacement for pip and pip-tools. It's recommended for its speed and modern Python tooling capabilities.
 
 ```bash
-uv add git+<UNSET>.git
+uv add git+https://github.com/PermitStack/permitstack-python.git
 ```
 
 ### PIP
@@ -83,7 +83,7 @@ uv add git+<UNSET>.git
 *PIP* is the default package installer for Python, enabling easy installation and management of packages from PyPI via the command line.
 
 ```bash
-pip install git+<UNSET>.git
+pip install git+https://github.com/PermitStack/permitstack-python.git
 ```
 
 ### Poetry
@@ -91,7 +91,7 @@ pip install git+<UNSET>.git
 *Poetry* is a modern tool that simplifies dependency management and package publishing by using a single `pyproject.toml` file to handle project metadata and dependencies.
 
 ```bash
-poetry add git+<UNSET>.git
+poetry add git+https://github.com/PermitStack/permitstack-python.git
 ```
 
 ### Shell and script usage with `uv`
