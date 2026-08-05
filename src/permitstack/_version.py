@@ -3,7 +3,7 @@
 import importlib.metadata
 
 __title__: str = "permitstack"
-__version__: str = "1.1.6"
+__version__: str = "1.1.7"
 __openapi_doc_version__: str = "1.0.0"
 __gen_version__: str = "2.911.0"
 __user_agent__: str = "speakeasy-sdk/python 1.1.6 2.911.0 1.0.0 permitstack"
