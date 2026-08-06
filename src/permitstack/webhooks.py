@@ -192,7 +192,8 @@ class Webhooks(BaseSDK):
 
         Register a webhook to be notified when new permits match your filters.
 
-        Available on Developer ($49/mo) and above. Maximum 10 webhooks per API key.
+        Available on the Developer plan and above (see /v1/billing/plans for current pricing).
+    Maximum 10 webhooks per API key.
         When a new permit matches your filters, we'll POST the permit data as JSON to your URL.
 
         :param url:
@@ -307,7 +308,8 @@ class Webhooks(BaseSDK):
 
         Register a webhook to be notified when new permits match your filters.
 
-        Available on Developer ($49/mo) and above. Maximum 10 webhooks per API key.
+        Available on the Developer plan and above (see /v1/billing/plans for current pricing).
+    Maximum 10 webhooks per API key.
         When a new permit matches your filters, we'll POST the permit data as JSON to your URL.
 
         :param url:
