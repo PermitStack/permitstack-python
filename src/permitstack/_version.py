@@ -3,13 +3,25 @@
 import importlib.metadata
 
 __title__: str = "permitstack"
-__version__: str = "1.1.8"
+__version__: str = "1.1.9"
 __openapi_doc_version__: str = "1.0.0"
 __gen_version__: str = "2.911.0"
-__user_agent__: str = "speakeasy-sdk/python 1.1.6 2.911.0 1.0.0 permitstack"
 
 try:
     if __package__ is not None:
         __version__ = importlib.metadata.version(__package__)
 except importlib.metadata.PackageNotFoundError:
     pass
+
+# DERIVED, and derived AFTER the self-heal above -- never a hardcoded literal.
+# As a literal this string froze at 1.1.6 and shipped that way in BOTH 1.1.7 and 1.1.8
+# (and at 1.1.1 through 1.1.3/1.1.4 before that), because the self-heal block rewrites
+# __version__ only and never touched the user agent. Every request the SDK made announced
+# a version three releases behind, so nginx logs could not tell 1.1.6, 1.1.7 and 1.1.8
+# apart -- 1,584 requests in Aug 2026 all reported the same string. The drift appears
+# whenever the version is hand-bumped between Speakeasy regenerations, which is the normal
+# release path here, so f-string it and the failure mode cannot recur.
+__user_agent__: str = (
+    f"speakeasy-sdk/python {__version__} {__gen_version__} "
+    f"{__openapi_doc_version__} {__title__}"
+)
