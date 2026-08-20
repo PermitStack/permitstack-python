@@ -13,7 +13,7 @@ Developer-friendly & type-safe Python SDK specifically catered to leverage *perm
 PermitStack: 
 ## PermitStack Building Permit API
 
-Access 87M+ building permits across 8,000+ U.S. cities in all 50 states (755 active data sources spanning counties and statewide feeds, plus 73 historical archives), updated daily from official open data portals.
+Access 93M+ building permits across 8,000+ U.S. cities in 48 states and DC (761 active data sources spanning counties and statewide feeds, plus 73 historical archives), updated daily from official open data portals.
 
 ### Getting started
 1. Sign up at [permit-stack.com](https://permit-stack.com/#pricing) for a free API key (100 req/day)

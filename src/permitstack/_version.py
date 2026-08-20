@@ -3,7 +3,7 @@
 import importlib.metadata
 
 __title__: str = "permitstack"
-__version__: str = "1.1.9"
+__version__: str = "1.1.11"
 __openapi_doc_version__: str = "1.0.0"
 __gen_version__: str = "2.911.0"
 
