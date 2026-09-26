@@ -1,8 +1,8 @@
 [project]
 name = "permitstack"
-version = "1.1.13"
+version = "1.1.14"
 description = "Official Python SDK for the PermitStack building permit data API."
-authors = [{ name = "PermitStack" },]
+authors = [{ name = "PermitStack", email = "support@permit-stack.com" },]
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -11,6 +11,12 @@ dependencies = [
     "pydantic >=2.11.2",
 ]
 license = { text = "Apache-2.0" }
+
+[project.urls]
+Homepage = "https://permit-stack.com"
+Documentation = "https://permit-stack.com/docs"
+Repository = "https://github.com/PermitStack/permitstack-python"
+Issues = "https://github.com/PermitStack/permitstack-python/issues"
 
 [dependency-groups]
 dev = [
