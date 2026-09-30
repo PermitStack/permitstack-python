@@ -21,6 +21,8 @@ class GetPropertyByParcelRequestTypedDict(TypedDict):
     r"""Optional 2-letter state to disambiguate the same parcel number across counties"""
     page: NotRequired[int]
     per_page: NotRequired[int]
+    limit: NotRequired[Nullable[int]]
+    r"""Alias of per_page."""
 
 
 class GetPropertyByParcelRequest(BaseModel):
@@ -45,10 +47,16 @@ class GetPropertyByParcelRequest(BaseModel):
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
     ] = 50
 
+    limit: Annotated[
+        OptionalNullable[int],
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+    r"""Alias of per_page."""
+
     @model_serializer(mode="wrap")
     def serialize_model(self, handler):
-        optional_fields = set(["state", "page", "per_page"])
-        nullable_fields = set(["state"])
+        optional_fields = set(["state", "page", "per_page", "limit"])
+        nullable_fields = set(["state", "limit"])
         serialized = handler(self)
         m = {}
 

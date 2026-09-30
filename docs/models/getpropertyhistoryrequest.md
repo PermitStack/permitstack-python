@@ -11,3 +11,4 @@
 | `zip`                                                    | *OptionalNullable[str]*                                  | :heavy_minus_sign:                                       | Optional ZIP (prefix-matched)                            |
 | `page`                                                   | *Optional[int]*                                          | :heavy_minus_sign:                                       | N/A                                                      |
 | `per_page`                                               | *Optional[int]*                                          | :heavy_minus_sign:                                       | N/A                                                      |
+| `limit`                                                  | *OptionalNullable[int]*                                  | :heavy_minus_sign:                                       | Alias of per_page.                                       |

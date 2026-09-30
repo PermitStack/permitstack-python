@@ -23,7 +23,8 @@ class Permits(BaseSDK):
         address: OptionalNullable[str] = UNSET,
         lat: OptionalNullable[float] = UNSET,
         lng: OptionalNullable[float] = UNSET,
-        radius_miles: Optional[float] = 5,
+        radius_miles: Optional[float] = 5.0,
+        fields: Optional[str] = "summary",
         bbox: OptionalNullable[str] = UNSET,
         polygon: OptionalNullable[str] = UNSET,
         category: OptionalNullable[str] = UNSET,
@@ -47,14 +48,41 @@ class Permits(BaseSDK):
         scope: OptionalNullable[str] = UNSET,
         q: OptionalNullable[str] = UNSET,
         contractor_name: OptionalNullable[str] = UNSET,
+        owner_filed: OptionalNullable[bool] = UNSET,
+        has_owner_address: OptionalNullable[bool] = UNSET,
         page: Optional[int] = 1,
         per_page: Optional[int] = 25,
+        keyword: OptionalNullable[str] = UNSET,
+        date_from: OptionalNullable[date] = UNSET,
+        date_to: OptionalNullable[date] = UNSET,
+        start_date: OptionalNullable[date] = UNSET,
+        end_date: OptionalNullable[date] = UNSET,
+        limit: OptionalNullable[int] = UNSET,
+        count_only: Optional[bool] = False,
         retries: OptionalNullable[utils.RetryConfig] = UNSET,
         server_url: Optional[str] = None,
         timeout_ms: Optional[int] = None,
         http_headers: Optional[Mapping[str, str]] = None,
     ) -> models.PermitSearchResponse:
         r"""Search Permits
+
+        Search building permits by location, date, category, contractor and more.
+
+        Filters combine with AND. Supply at least one narrowing filter -- a city, ZIP,
+        jurisdiction, date range or lat/lng radius -- for a query that returns quickly.
+
+        Results are paginated and ordered newest-first on the permit's best available date
+        (`date_issued`, falling back to `date_filed`). `total` is exact up to 10,000; beyond
+        that it stops counting and returns `total: 10000` with `total_capped: true`, meaning
+        \"10,000 or more\". If the count cannot finish in time the response carries
+        `total: null` with `total_unknown: true` -- an unknown total is reported as unknown
+        and never as a number. Rows are unaffected either way; page through them normally.
+
+        `category=hvac` matches HVAC and MECHANICAL together, because AC and furnace work is
+        filed under either depending on the city. Unknown parameter names are rejected with a
+        400 rather than ignored, so a typo can never silently return unfiltered results.
+
+        Free-tier keys are limited to a recent window; paid tiers have full history.
 
         :param zip_code: 5-digit ZIP code
         :param city: City name
@@ -64,6 +92,7 @@ class Permits(BaseSDK):
         :param lat: Latitude for radius search
         :param lng: Longitude for radius search
         :param radius_miles: Radius in miles (used with lat/lng)
+        :param fields: 'summary' (default) or 'full'. With 'full' each result is a PermitDetail rather than a PermitSummary -- the same nine extra columns GET /v1/permits/{id} returns (record_kind, date_expired, fee_amount, stories, units, square_footage, applicant_name, contractor_license, created_at) -- so you do not fetch them one permit at a time. See the PermitDetail schema for their types; the declared response schema here is PermitSummary, which is the default shape. Developer plan and above.
         :param bbox: Map-viewport bounding box 'minLng,minLat,maxLng,maxLat'. Returns permits whose location falls inside the box (geocoded permits only).
         :param polygon: A drawn area as a GeoJSON Polygon geometry (URL-encoded), e.g. {\"type\":\"Polygon\",\"coordinates\":[[[lng,lat],...]]}. Returns permits inside the polygon (geocoded permits only).
         :param category: Permit category (e.g. solar, SOLAR, roofing, hvac — case insensitive)
@@ -85,10 +114,19 @@ class Permits(BaseSDK):
         :param min_sqft: Minimum square footage mentioned (from enrichment)
         :param has_enrichment: Only permits that have (true) or lack (false) LLM enrichment
         :param scope: Substring match on the enriched work scope
-        :param q: Case-insensitive substring match across description, address, and permit number
+        :param q: Case-insensitive substring match across description, address, and permit number. Terms under 3 characters are matched but not counted: `total` is null with total_unknown=true (a 1-2 character term has no trigram index and the count would cost tens of seconds).
         :param contractor_name: Contractor name (partial match)
+        :param owner_filed: true = owner-filed permits only (no contractor on record but an owner name is present — often a DIY/homeowner lead, though for feeds that don't capture contractors the owner may be a builder or institution); false = permits that have a contractor
+        :param has_owner_address: true = only permits that carry a property-owner mailing address; false = only those that do not. Coverage varies sharply by jurisdiction (we hold the county assessor roll for some and not others), so this is a targeting filter rather than a defect: it returns exactly the rows that are actionable. The address itself is visible on Business and above.
         :param page:
-        :param per_page:
+        :param per_page: Results per page. Above your plan's maximum this is clamped, not rejected; the response echoes the per_page actually applied.
+        :param keyword: Alias of `q`.
+        :param date_from: Alias of `date_after`.
+        :param date_to: Alias of `date_before`.
+        :param start_date: Alias of `date_after`.
+        :param end_date: Alias of `date_before`.
+        :param limit: Alias of `per_page`. Clamped to your plan's maximum, not rejected.
+        :param count_only: Return only the total for these filters -- no permit records. Skips the row fetch entirely, so it is markedly cheaper for both of us when you are sizing a query rather than reading it. `results` comes back empty and `total_capped` / `total_unknown` mean exactly what they always do.
         :param retries: Override the default retry configuration for this method
         :param server_url: Override the default server URL for this method
         :param timeout_ms: Override the default request timeout configuration for this method in milliseconds
@@ -98,6 +136,9 @@ class Permits(BaseSDK):
         url_variables = None
         if timeout_ms is None:
             timeout_ms = self.sdk_configuration.timeout_ms
+
+        if timeout_ms is None:
+            timeout_ms = 120000
 
         if server_url is not None:
             base_url = server_url
@@ -113,6 +154,7 @@ class Permits(BaseSDK):
             lat=lat,
             lng=lng,
             radius_miles=radius_miles,
+            fields=fields,
             bbox=bbox,
             polygon=polygon,
             category=category,
@@ -136,8 +178,17 @@ class Permits(BaseSDK):
             scope=scope,
             q=q,
             contractor_name=contractor_name,
+            owner_filed=owner_filed,
+            has_owner_address=has_owner_address,
             page=page,
             per_page=per_page,
+            keyword=keyword,
+            date_from=date_from,
+            date_to=date_to,
+            start_date=start_date,
+            end_date=end_date,
+            limit=limit,
+            count_only=count_only,
         )
 
         req = self._build_request(
@@ -174,6 +225,8 @@ class Permits(BaseSDK):
                 security_source=get_security_from_env(
                     self.sdk_configuration.security, models.Security
                 ),
+                tags=["Permits"],
+                extensions=None,
             ),
             request=req,
             is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
@@ -183,11 +236,19 @@ class Permits(BaseSDK):
         response_data: Any = None
         if utils.match_response(http_res, "200", "application/json"):
             return unmarshal_json_response(models.PermitSearchResponse, http_res)
+        if utils.match_response(http_res, "403", "application/json"):
+            response_data = unmarshal_json_response(
+                errors.FeatureLockedErrorData, http_res
+            )
+            raise errors.FeatureLockedError(response_data, http_res)
         if utils.match_response(http_res, "422", "application/json"):
             response_data = unmarshal_json_response(
                 errors.HTTPValidationErrorData, http_res
             )
             raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
         if utils.match_response(http_res, "4XX", "*"):
             http_res_text = utils.stream_to_text(http_res)
             raise errors.PermitstackDefaultError(
@@ -211,7 +272,8 @@ class Permits(BaseSDK):
         address: OptionalNullable[str] = UNSET,
         lat: OptionalNullable[float] = UNSET,
         lng: OptionalNullable[float] = UNSET,
-        radius_miles: Optional[float] = 5,
+        radius_miles: Optional[float] = 5.0,
+        fields: Optional[str] = "summary",
         bbox: OptionalNullable[str] = UNSET,
         polygon: OptionalNullable[str] = UNSET,
         category: OptionalNullable[str] = UNSET,
@@ -235,14 +297,41 @@ class Permits(BaseSDK):
         scope: OptionalNullable[str] = UNSET,
         q: OptionalNullable[str] = UNSET,
         contractor_name: OptionalNullable[str] = UNSET,
+        owner_filed: OptionalNullable[bool] = UNSET,
+        has_owner_address: OptionalNullable[bool] = UNSET,
         page: Optional[int] = 1,
         per_page: Optional[int] = 25,
+        keyword: OptionalNullable[str] = UNSET,
+        date_from: OptionalNullable[date] = UNSET,
+        date_to: OptionalNullable[date] = UNSET,
+        start_date: OptionalNullable[date] = UNSET,
+        end_date: OptionalNullable[date] = UNSET,
+        limit: OptionalNullable[int] = UNSET,
+        count_only: Optional[bool] = False,
         retries: OptionalNullable[utils.RetryConfig] = UNSET,
         server_url: Optional[str] = None,
         timeout_ms: Optional[int] = None,
         http_headers: Optional[Mapping[str, str]] = None,
     ) -> models.PermitSearchResponse:
         r"""Search Permits
+
+        Search building permits by location, date, category, contractor and more.
+
+        Filters combine with AND. Supply at least one narrowing filter -- a city, ZIP,
+        jurisdiction, date range or lat/lng radius -- for a query that returns quickly.
+
+        Results are paginated and ordered newest-first on the permit's best available date
+        (`date_issued`, falling back to `date_filed`). `total` is exact up to 10,000; beyond
+        that it stops counting and returns `total: 10000` with `total_capped: true`, meaning
+        \"10,000 or more\". If the count cannot finish in time the response carries
+        `total: null` with `total_unknown: true` -- an unknown total is reported as unknown
+        and never as a number. Rows are unaffected either way; page through them normally.
+
+        `category=hvac` matches HVAC and MECHANICAL together, because AC and furnace work is
+        filed under either depending on the city. Unknown parameter names are rejected with a
+        400 rather than ignored, so a typo can never silently return unfiltered results.
+
+        Free-tier keys are limited to a recent window; paid tiers have full history.
 
         :param zip_code: 5-digit ZIP code
         :param city: City name
@@ -252,6 +341,7 @@ class Permits(BaseSDK):
         :param lat: Latitude for radius search
         :param lng: Longitude for radius search
         :param radius_miles: Radius in miles (used with lat/lng)
+        :param fields: 'summary' (default) or 'full'. With 'full' each result is a PermitDetail rather than a PermitSummary -- the same nine extra columns GET /v1/permits/{id} returns (record_kind, date_expired, fee_amount, stories, units, square_footage, applicant_name, contractor_license, created_at) -- so you do not fetch them one permit at a time. See the PermitDetail schema for their types; the declared response schema here is PermitSummary, which is the default shape. Developer plan and above.
         :param bbox: Map-viewport bounding box 'minLng,minLat,maxLng,maxLat'. Returns permits whose location falls inside the box (geocoded permits only).
         :param polygon: A drawn area as a GeoJSON Polygon geometry (URL-encoded), e.g. {\"type\":\"Polygon\",\"coordinates\":[[[lng,lat],...]]}. Returns permits inside the polygon (geocoded permits only).
         :param category: Permit category (e.g. solar, SOLAR, roofing, hvac — case insensitive)
@@ -273,10 +363,19 @@ class Permits(BaseSDK):
         :param min_sqft: Minimum square footage mentioned (from enrichment)
         :param has_enrichment: Only permits that have (true) or lack (false) LLM enrichment
         :param scope: Substring match on the enriched work scope
-        :param q: Case-insensitive substring match across description, address, and permit number
+        :param q: Case-insensitive substring match across description, address, and permit number. Terms under 3 characters are matched but not counted: `total` is null with total_unknown=true (a 1-2 character term has no trigram index and the count would cost tens of seconds).
         :param contractor_name: Contractor name (partial match)
+        :param owner_filed: true = owner-filed permits only (no contractor on record but an owner name is present — often a DIY/homeowner lead, though for feeds that don't capture contractors the owner may be a builder or institution); false = permits that have a contractor
+        :param has_owner_address: true = only permits that carry a property-owner mailing address; false = only those that do not. Coverage varies sharply by jurisdiction (we hold the county assessor roll for some and not others), so this is a targeting filter rather than a defect: it returns exactly the rows that are actionable. The address itself is visible on Business and above.
         :param page:
-        :param per_page:
+        :param per_page: Results per page. Above your plan's maximum this is clamped, not rejected; the response echoes the per_page actually applied.
+        :param keyword: Alias of `q`.
+        :param date_from: Alias of `date_after`.
+        :param date_to: Alias of `date_before`.
+        :param start_date: Alias of `date_after`.
+        :param end_date: Alias of `date_before`.
+        :param limit: Alias of `per_page`. Clamped to your plan's maximum, not rejected.
+        :param count_only: Return only the total for these filters -- no permit records. Skips the row fetch entirely, so it is markedly cheaper for both of us when you are sizing a query rather than reading it. `results` comes back empty and `total_capped` / `total_unknown` mean exactly what they always do.
         :param retries: Override the default retry configuration for this method
         :param server_url: Override the default server URL for this method
         :param timeout_ms: Override the default request timeout configuration for this method in milliseconds
@@ -286,6 +385,9 @@ class Permits(BaseSDK):
         url_variables = None
         if timeout_ms is None:
             timeout_ms = self.sdk_configuration.timeout_ms
+
+        if timeout_ms is None:
+            timeout_ms = 120000
 
         if server_url is not None:
             base_url = server_url
@@ -301,6 +403,7 @@ class Permits(BaseSDK):
             lat=lat,
             lng=lng,
             radius_miles=radius_miles,
+            fields=fields,
             bbox=bbox,
             polygon=polygon,
             category=category,
@@ -324,8 +427,17 @@ class Permits(BaseSDK):
             scope=scope,
             q=q,
             contractor_name=contractor_name,
+            owner_filed=owner_filed,
+            has_owner_address=has_owner_address,
             page=page,
             per_page=per_page,
+            keyword=keyword,
+            date_from=date_from,
+            date_to=date_to,
+            start_date=start_date,
+            end_date=end_date,
+            limit=limit,
+            count_only=count_only,
         )
 
         req = self._build_request_async(
@@ -362,6 +474,8 @@ class Permits(BaseSDK):
                 security_source=get_security_from_env(
                     self.sdk_configuration.security, models.Security
                 ),
+                tags=["Permits"],
+                extensions=None,
             ),
             request=req,
             is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
@@ -371,11 +485,19 @@ class Permits(BaseSDK):
         response_data: Any = None
         if utils.match_response(http_res, "200", "application/json"):
             return unmarshal_json_response(models.PermitSearchResponse, http_res)
+        if utils.match_response(http_res, "403", "application/json"):
+            response_data = unmarshal_json_response(
+                errors.FeatureLockedErrorData, http_res
+            )
+            raise errors.FeatureLockedError(response_data, http_res)
         if utils.match_response(http_res, "422", "application/json"):
             response_data = unmarshal_json_response(
                 errors.HTTPValidationErrorData, http_res
             )
             raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
         if utils.match_response(http_res, "4XX", "*"):
             http_res_text = await utils.stream_to_text_async(http_res)
             raise errors.PermitstackDefaultError(
@@ -416,12 +538,19 @@ class Permits(BaseSDK):
         scope: OptionalNullable[str] = UNSET,
         q: OptionalNullable[str] = UNSET,
         contractor_name: OptionalNullable[str] = UNSET,
+        owner_filed: OptionalNullable[bool] = UNSET,
+        jurisdiction: OptionalNullable[str] = UNSET,
         limit: Optional[int] = 1000,
+        keyword: OptionalNullable[str] = UNSET,
+        date_from: OptionalNullable[date] = UNSET,
+        date_to: OptionalNullable[date] = UNSET,
+        start_date: OptionalNullable[date] = UNSET,
+        end_date: OptionalNullable[date] = UNSET,
         retries: OptionalNullable[utils.RetryConfig] = UNSET,
         server_url: Optional[str] = None,
         timeout_ms: Optional[int] = None,
         http_headers: Optional[Mapping[str, str]] = None,
-    ) -> Any:
+    ) -> str:
         r"""Export Permits
 
         Export permits matching filters as CSV. Tier-gated row limits.
@@ -450,7 +579,14 @@ class Permits(BaseSDK):
         :param scope:
         :param q:
         :param contractor_name:
-        :param limit:
+        :param owner_filed: true = owner-filed permits only (no contractor on record, owner name present — often DIY/homeowner leads, though for feeds without contractor capture the owner may be a builder/institution); false = permits that have a contractor
+        :param jurisdiction: A jurisdiction's id (from /v1/jurisdictions) or its name, partial and case-insensitive -- the same matching as /v1/permits/search. Lets a full load be partitioned along the coverage list.
+        :param limit: Rows to return, up to your plan's export maximum (a larger value is refused with 403, never silently lowered). If more rows match than `limit`, the response header X-Permitstack-Truncated is `true`: narrow the filter or split the date range and export again.
+        :param keyword: Alias of `q`.
+        :param date_from: Alias of `date_after`.
+        :param date_to: Alias of `date_before`.
+        :param start_date: Alias of `date_after`.
+        :param end_date: Alias of `date_before`.
         :param retries: Override the default retry configuration for this method
         :param server_url: Override the default server URL for this method
         :param timeout_ms: Override the default request timeout configuration for this method in milliseconds
@@ -460,6 +596,9 @@ class Permits(BaseSDK):
         url_variables = None
         if timeout_ms is None:
             timeout_ms = self.sdk_configuration.timeout_ms
+
+        if timeout_ms is None:
+            timeout_ms = 120000
 
         if server_url is not None:
             base_url = server_url
@@ -491,7 +630,14 @@ class Permits(BaseSDK):
             scope=scope,
             q=q,
             contractor_name=contractor_name,
+            owner_filed=owner_filed,
+            jurisdiction=jurisdiction,
             limit=limit,
+            keyword=keyword,
+            date_from=date_from,
+            date_to=date_to,
+            start_date=start_date,
+            end_date=end_date,
         )
 
         req = self._build_request(
@@ -504,7 +650,7 @@ class Permits(BaseSDK):
             request_has_path_params=False,
             request_has_query_params=True,
             user_agent_header="user-agent",
-            accept_header_value="application/json",
+            accept_header_value="text/csv",
             http_headers=http_headers,
             security=self.sdk_configuration.security,
             allow_empty_value=None,
@@ -528,6 +674,8 @@ class Permits(BaseSDK):
                 security_source=get_security_from_env(
                     self.sdk_configuration.security, models.Security
                 ),
+                tags=["Permits"],
+                extensions=None,
             ),
             request=req,
             is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
@@ -535,13 +683,21 @@ class Permits(BaseSDK):
         )
 
         response_data: Any = None
-        if utils.match_response(http_res, "200", "application/json"):
-            return unmarshal_json_response(Any, http_res)
+        if utils.match_response(http_res, "200", "text/csv"):
+            return http_res.text
+        if utils.match_response(http_res, "403", "application/json"):
+            response_data = unmarshal_json_response(
+                errors.FeatureLockedErrorData, http_res
+            )
+            raise errors.FeatureLockedError(response_data, http_res)
         if utils.match_response(http_res, "422", "application/json"):
             response_data = unmarshal_json_response(
                 errors.HTTPValidationErrorData, http_res
             )
             raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
         if utils.match_response(http_res, "4XX", "*"):
             http_res_text = utils.stream_to_text(http_res)
             raise errors.PermitstackDefaultError(
@@ -582,12 +738,19 @@ class Permits(BaseSDK):
         scope: OptionalNullable[str] = UNSET,
         q: OptionalNullable[str] = UNSET,
         contractor_name: OptionalNullable[str] = UNSET,
+        owner_filed: OptionalNullable[bool] = UNSET,
+        jurisdiction: OptionalNullable[str] = UNSET,
         limit: Optional[int] = 1000,
+        keyword: OptionalNullable[str] = UNSET,
+        date_from: OptionalNullable[date] = UNSET,
+        date_to: OptionalNullable[date] = UNSET,
+        start_date: OptionalNullable[date] = UNSET,
+        end_date: OptionalNullable[date] = UNSET,
         retries: OptionalNullable[utils.RetryConfig] = UNSET,
         server_url: Optional[str] = None,
         timeout_ms: Optional[int] = None,
         http_headers: Optional[Mapping[str, str]] = None,
-    ) -> Any:
+    ) -> str:
         r"""Export Permits
 
         Export permits matching filters as CSV. Tier-gated row limits.
@@ -616,7 +779,14 @@ class Permits(BaseSDK):
         :param scope:
         :param q:
         :param contractor_name:
-        :param limit:
+        :param owner_filed: true = owner-filed permits only (no contractor on record, owner name present — often DIY/homeowner leads, though for feeds without contractor capture the owner may be a builder/institution); false = permits that have a contractor
+        :param jurisdiction: A jurisdiction's id (from /v1/jurisdictions) or its name, partial and case-insensitive -- the same matching as /v1/permits/search. Lets a full load be partitioned along the coverage list.
+        :param limit: Rows to return, up to your plan's export maximum (a larger value is refused with 403, never silently lowered). If more rows match than `limit`, the response header X-Permitstack-Truncated is `true`: narrow the filter or split the date range and export again.
+        :param keyword: Alias of `q`.
+        :param date_from: Alias of `date_after`.
+        :param date_to: Alias of `date_before`.
+        :param start_date: Alias of `date_after`.
+        :param end_date: Alias of `date_before`.
         :param retries: Override the default retry configuration for this method
         :param server_url: Override the default server URL for this method
         :param timeout_ms: Override the default request timeout configuration for this method in milliseconds
@@ -626,6 +796,9 @@ class Permits(BaseSDK):
         url_variables = None
         if timeout_ms is None:
             timeout_ms = self.sdk_configuration.timeout_ms
+
+        if timeout_ms is None:
+            timeout_ms = 120000
 
         if server_url is not None:
             base_url = server_url
@@ -657,12 +830,275 @@ class Permits(BaseSDK):
             scope=scope,
             q=q,
             contractor_name=contractor_name,
+            owner_filed=owner_filed,
+            jurisdiction=jurisdiction,
             limit=limit,
+            keyword=keyword,
+            date_from=date_from,
+            date_to=date_to,
+            start_date=start_date,
+            end_date=end_date,
         )
 
         req = self._build_request_async(
             method="GET",
             path="/v1/permits/export",
+            base_url=base_url,
+            url_variables=url_variables,
+            request=request,
+            request_body_required=False,
+            request_has_path_params=False,
+            request_has_query_params=True,
+            user_agent_header="user-agent",
+            accept_header_value="text/csv",
+            http_headers=http_headers,
+            security=self.sdk_configuration.security,
+            allow_empty_value=None,
+            timeout_ms=timeout_ms,
+        )
+
+        if retries == UNSET:
+            if self.sdk_configuration.retry_config is not UNSET:
+                retries = self.sdk_configuration.retry_config
+
+        retry_config = None
+        if isinstance(retries, utils.RetryConfig):
+            retry_config = (retries, ["429", "500", "502", "503", "504"])
+
+        http_res = await self.do_request_async(
+            hook_ctx=HookContext(
+                config=self.sdk_configuration,
+                base_url=base_url or "",
+                operation_id="export_permits",
+                oauth2_scopes=None,
+                security_source=get_security_from_env(
+                    self.sdk_configuration.security, models.Security
+                ),
+                tags=["Permits"],
+                extensions=None,
+            ),
+            request=req,
+            is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
+            retry_config=retry_config,
+        )
+
+        response_data: Any = None
+        if utils.match_response(http_res, "200", "text/csv"):
+            return http_res.text
+        if utils.match_response(http_res, "403", "application/json"):
+            response_data = unmarshal_json_response(
+                errors.FeatureLockedErrorData, http_res
+            )
+            raise errors.FeatureLockedError(response_data, http_res)
+        if utils.match_response(http_res, "422", "application/json"):
+            response_data = unmarshal_json_response(
+                errors.HTTPValidationErrorData, http_res
+            )
+            raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
+        if utils.match_response(http_res, "4XX", "*"):
+            http_res_text = await utils.stream_to_text_async(http_res)
+            raise errors.PermitstackDefaultError(
+                "API error occurred", http_res, http_res_text
+            )
+        if utils.match_response(http_res, "5XX", "*"):
+            http_res_text = await utils.stream_to_text_async(http_res)
+            raise errors.PermitstackDefaultError(
+                "API error occurred", http_res, http_res_text
+            )
+
+        raise errors.PermitstackDefaultError("Unexpected response received", http_res)
+
+    def sync_permits(
+        self,
+        *,
+        cursor: OptionalNullable[str] = UNSET,
+        since: OptionalNullable[str] = UNSET,
+        limit: Optional[int] = 5000,
+        record_kind: Optional[str] = "permit",
+        state: OptionalNullable[str] = UNSET,
+        category: OptionalNullable[str] = UNSET,
+        fields: Optional[str] = "summary",
+        retries: OptionalNullable[utils.RetryConfig] = UNSET,
+        server_url: Optional[str] = None,
+        timeout_ms: Optional[int] = None,
+        http_headers: Optional[Mapping[str, str]] = None,
+    ) -> Any:
+        r"""Sync Permits
+
+        Incremental data feed (change-data-capture). Page the dataset ordered by
+        (updated_at, id). Omit `cursor` for the initial full load; persist `next_cursor` and pass
+        it back after each nightly ingest to receive only new + changed permits. Upsert-only
+        (deletes are not emitted).
+
+        :param cursor: Opaque cursor from the previous response's `next_cursor`. Omit to start the initial full sync from the beginning.
+        :param since: Alternative start point: an ISO-8601 UTC timestamp; returns permits with updated_at >= since. Ignored when `cursor` is supplied.
+        :param limit: Max permits per page (cursor page size, up to 50,000).
+        :param record_kind: 'permit' (default), a specific record_kind, or 'all'.
+        :param state: Optional 2-letter state filter to scope the feed.
+        :param category: Optional category filter (e.g. solar, roofing).
+        :param fields: 'summary' (default) or 'full'. 'full' adds record_kind, date_expired, fee_amount, stories, units, square_footage, applicant_name, contractor_license and created_at to every record, so a mirror does not have to fetch them one permit at a time. OPT-IN: the default payload is unchanged apart from `contractor_id`, added on 2026-09-10 to every permit surface; widening a feed under a consumer with a strict schema is otherwise avoided.
+        :param retries: Override the default retry configuration for this method
+        :param server_url: Override the default server URL for this method
+        :param timeout_ms: Override the default request timeout configuration for this method in milliseconds
+        :param http_headers: Additional headers to set or replace on requests.
+        """
+        base_url = None
+        url_variables = None
+        if timeout_ms is None:
+            timeout_ms = self.sdk_configuration.timeout_ms
+
+        if timeout_ms is None:
+            timeout_ms = 120000
+
+        if server_url is not None:
+            base_url = server_url
+        else:
+            base_url = self._get_url(base_url, url_variables)
+
+        request = models.SyncPermitsRequest(
+            cursor=cursor,
+            since=since,
+            limit=limit,
+            record_kind=record_kind,
+            state=state,
+            category=category,
+            fields=fields,
+        )
+
+        req = self._build_request(
+            method="GET",
+            path="/v1/permits/sync",
+            base_url=base_url,
+            url_variables=url_variables,
+            request=request,
+            request_body_required=False,
+            request_has_path_params=False,
+            request_has_query_params=True,
+            user_agent_header="user-agent",
+            accept_header_value="application/json",
+            http_headers=http_headers,
+            security=self.sdk_configuration.security,
+            allow_empty_value=None,
+            timeout_ms=timeout_ms,
+        )
+
+        if retries == UNSET:
+            if self.sdk_configuration.retry_config is not UNSET:
+                retries = self.sdk_configuration.retry_config
+
+        retry_config = None
+        if isinstance(retries, utils.RetryConfig):
+            retry_config = (retries, ["429", "500", "502", "503", "504"])
+
+        http_res = self.do_request(
+            hook_ctx=HookContext(
+                config=self.sdk_configuration,
+                base_url=base_url or "",
+                operation_id="sync_permits",
+                oauth2_scopes=None,
+                security_source=get_security_from_env(
+                    self.sdk_configuration.security, models.Security
+                ),
+                tags=["Permits"],
+                extensions=None,
+            ),
+            request=req,
+            is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
+            retry_config=retry_config,
+        )
+
+        response_data: Any = None
+        if utils.match_response(http_res, "200", "application/json"):
+            return unmarshal_json_response(Any, http_res)
+        if utils.match_response(http_res, "403", "application/json"):
+            response_data = unmarshal_json_response(
+                errors.FeatureLockedErrorData, http_res
+            )
+            raise errors.FeatureLockedError(response_data, http_res)
+        if utils.match_response(http_res, "422", "application/json"):
+            response_data = unmarshal_json_response(
+                errors.HTTPValidationErrorData, http_res
+            )
+            raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
+        if utils.match_response(http_res, "4XX", "*"):
+            http_res_text = utils.stream_to_text(http_res)
+            raise errors.PermitstackDefaultError(
+                "API error occurred", http_res, http_res_text
+            )
+        if utils.match_response(http_res, "5XX", "*"):
+            http_res_text = utils.stream_to_text(http_res)
+            raise errors.PermitstackDefaultError(
+                "API error occurred", http_res, http_res_text
+            )
+
+        raise errors.PermitstackDefaultError("Unexpected response received", http_res)
+
+    async def sync_permits_async(
+        self,
+        *,
+        cursor: OptionalNullable[str] = UNSET,
+        since: OptionalNullable[str] = UNSET,
+        limit: Optional[int] = 5000,
+        record_kind: Optional[str] = "permit",
+        state: OptionalNullable[str] = UNSET,
+        category: OptionalNullable[str] = UNSET,
+        fields: Optional[str] = "summary",
+        retries: OptionalNullable[utils.RetryConfig] = UNSET,
+        server_url: Optional[str] = None,
+        timeout_ms: Optional[int] = None,
+        http_headers: Optional[Mapping[str, str]] = None,
+    ) -> Any:
+        r"""Sync Permits
+
+        Incremental data feed (change-data-capture). Page the dataset ordered by
+        (updated_at, id). Omit `cursor` for the initial full load; persist `next_cursor` and pass
+        it back after each nightly ingest to receive only new + changed permits. Upsert-only
+        (deletes are not emitted).
+
+        :param cursor: Opaque cursor from the previous response's `next_cursor`. Omit to start the initial full sync from the beginning.
+        :param since: Alternative start point: an ISO-8601 UTC timestamp; returns permits with updated_at >= since. Ignored when `cursor` is supplied.
+        :param limit: Max permits per page (cursor page size, up to 50,000).
+        :param record_kind: 'permit' (default), a specific record_kind, or 'all'.
+        :param state: Optional 2-letter state filter to scope the feed.
+        :param category: Optional category filter (e.g. solar, roofing).
+        :param fields: 'summary' (default) or 'full'. 'full' adds record_kind, date_expired, fee_amount, stories, units, square_footage, applicant_name, contractor_license and created_at to every record, so a mirror does not have to fetch them one permit at a time. OPT-IN: the default payload is unchanged apart from `contractor_id`, added on 2026-09-10 to every permit surface; widening a feed under a consumer with a strict schema is otherwise avoided.
+        :param retries: Override the default retry configuration for this method
+        :param server_url: Override the default server URL for this method
+        :param timeout_ms: Override the default request timeout configuration for this method in milliseconds
+        :param http_headers: Additional headers to set or replace on requests.
+        """
+        base_url = None
+        url_variables = None
+        if timeout_ms is None:
+            timeout_ms = self.sdk_configuration.timeout_ms
+
+        if timeout_ms is None:
+            timeout_ms = 120000
+
+        if server_url is not None:
+            base_url = server_url
+        else:
+            base_url = self._get_url(base_url, url_variables)
+
+        request = models.SyncPermitsRequest(
+            cursor=cursor,
+            since=since,
+            limit=limit,
+            record_kind=record_kind,
+            state=state,
+            category=category,
+            fields=fields,
+        )
+
+        req = self._build_request_async(
+            method="GET",
+            path="/v1/permits/sync",
             base_url=base_url,
             url_variables=url_variables,
             request=request,
@@ -689,11 +1125,13 @@ class Permits(BaseSDK):
             hook_ctx=HookContext(
                 config=self.sdk_configuration,
                 base_url=base_url or "",
-                operation_id="export_permits",
+                operation_id="sync_permits",
                 oauth2_scopes=None,
                 security_source=get_security_from_env(
                     self.sdk_configuration.security, models.Security
                 ),
+                tags=["Permits"],
+                extensions=None,
             ),
             request=req,
             is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
@@ -703,11 +1141,19 @@ class Permits(BaseSDK):
         response_data: Any = None
         if utils.match_response(http_res, "200", "application/json"):
             return unmarshal_json_response(Any, http_res)
+        if utils.match_response(http_res, "403", "application/json"):
+            response_data = unmarshal_json_response(
+                errors.FeatureLockedErrorData, http_res
+            )
+            raise errors.FeatureLockedError(response_data, http_res)
         if utils.match_response(http_res, "422", "application/json"):
             response_data = unmarshal_json_response(
                 errors.HTTPValidationErrorData, http_res
             )
             raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
         if utils.match_response(http_res, "4XX", "*"):
             http_res_text = await utils.stream_to_text_async(http_res)
             raise errors.PermitstackDefaultError(
@@ -731,8 +1177,10 @@ class Permits(BaseSDK):
         jurisdiction: OptionalNullable[str] = UNSET,
         permit_id: OptionalNullable[str] = UNSET,
         detected_after: OptionalNullable[datetime] = UNSET,
+        cursor: OptionalNullable[str] = UNSET,
         page: Optional[int] = 1,
         per_page: Optional[int] = 50,
+        limit: OptionalNullable[int] = UNSET,
         retries: OptionalNullable[utils.RetryConfig] = UNSET,
         server_url: Optional[str] = None,
         timeout_ms: Optional[int] = None,
@@ -740,20 +1188,68 @@ class Permits(BaseSDK):
     ) -> models.PermitEventsResponse:
         r"""List Permit Events
 
-        Queryable feed of permit status/date transitions (new_permit, status_change,
-        issued, completed, expired), built from a daily-ingest diff. A real-time,
-        historical, filter-scoped change feed no competitor offers below enterprise —
-        pair it with a webhook to be alerted the moment a matching permit changes status.
+        What CHANGED, instead of re-reading everything: permit transitions
+        (new_permit, status_change, issued, completed, expired) built from the daily
+        ingest diff, filterable by city, state, category and jurisdiction.
 
-        :param event_type: Filter by event type: new_permit, status_change, issued, completed, expired
+        **This is the endpoint to poll on a schedule, and `cursor` is how to poll it.**
+        Save the `next_cursor` from each response and pass it back as `cursor` on the
+        next call; you then receive only what you have not already seen, in the order it
+        was detected, with no duplicates and no gap. Page until a response comes back
+        shorter than `per_page`, save that last `next_cursor`, and resume there tomorrow.
+
+        **WHERE YOU START MATTERS, AND THE FIRST CALL DOES NOT START AT THE BEGINNING.**
+        A call with NO cursor returns the NEWEST events and its `next_cursor` is the
+        frontier -- a watermark at \"now\". Pass it straight back and you correctly get 0
+        results, because you have just declared yourself caught up. That is exactly what
+        a poller wants: from here on you receive everything new. It is NOT a backfill,
+        and it will not walk history for you -- there are 75,544 events behind that
+        watermark for the Tampa filter below alone.
+
+        To start somewhere else, build the cursor yourself: it is
+        `<ISO-8601 timestamp>|<event id>`, and `|0` is a valid id floor.
+
+        # start polling from now (typical):
+        GET /v1/permits/events?city=Tampa&state=FL&category=roofing
+        &event_type=new_permit                       -> save next_cursor
+        # ...then, from the next call onward:
+        GET ...&cursor=2026-09-08T04%3A09%3A16.381111%2B00%3A00%7C51823904
+
+        # start from a chosen point instead (backfill the last 30 days, then keep polling):
+        GET ...&cursor=2026-08-11T00%3A00%3A00%2B00%3A00%7C0
+
+        One call answers what a paged re-pull of /v1/permits/search costs hundreds of.
+        Measured 2026-09-09, that Tampa query returns **38 records in a single call**;
+        the same question asked by re-pulling search pages 1-100 twelve times a day
+        costs ~9,600 requests and runs into the daily cap.
+
+        `detected_after` still works and is fine for an ad-hoc look at a window, but it
+        is the wrong tool for a poller: it is INCLUSIVE, and one ingest batch stamps
+        thousands of events with a single identical `detected_at` (measured 2026-09-10:
+        3,688 timestamps carry over 1,000 events each, the largest 1,370,561). A poller
+        that stores the newest `detected_at` and passes it back therefore re-receives
+        that whole batch every time. `cursor` breaks the tie on the event id and does not.
+
+        Supplying a `cursor` returns events oldest-unseen first, which is what lets a
+        batch be paged safely; without one you get the newest first, for browsing.
+        `cursor` and `page` are alternatives -- passing both is a 400 rather than a
+        silently skipped page.
+
+        Ingest runs once a day, so a daily poll is enough; `detected_at` is when WE saw
+        the change, not when the city recorded it. For push instead of poll, register a
+        webhook (developer tier and above) and skip the polling entirely.
+
+        :param event_type: Filter by event type: new_permit, status_change, issued, completed, expired (the permit's expiration date has passed without it being finished; emitted when that date arrives)
         :param category: Permit category (e.g. solar, battery)
         :param city: City name
         :param state: 2-letter state code
         :param jurisdiction: Jurisdiction name (partial)
         :param permit_id: Events for a single permit id
-        :param detected_after: Only events detected on/after this UTC timestamp (ISO 8601)
+        :param detected_after: Only events detected on/after this UTC timestamp (ISO 8601). Inclusive, so a batch sharing one timestamp is re-delivered; prefer `cursor` for polling.
+        :param cursor: Opaque cursor from the previous response's `next_cursor`. Resumes exactly where you stopped, with no duplicates and no gap. Omit on the first call.
         :param page:
         :param per_page:
+        :param limit: Alias of `per_page`. Clamped to 100, not rejected.
         :param retries: Override the default retry configuration for this method
         :param server_url: Override the default server URL for this method
         :param timeout_ms: Override the default request timeout configuration for this method in milliseconds
@@ -763,6 +1259,9 @@ class Permits(BaseSDK):
         url_variables = None
         if timeout_ms is None:
             timeout_ms = self.sdk_configuration.timeout_ms
+
+        if timeout_ms is None:
+            timeout_ms = 120000
 
         if server_url is not None:
             base_url = server_url
@@ -777,8 +1276,10 @@ class Permits(BaseSDK):
             jurisdiction=jurisdiction,
             permit_id=permit_id,
             detected_after=detected_after,
+            cursor=cursor,
             page=page,
             per_page=per_page,
+            limit=limit,
         )
 
         req = self._build_request(
@@ -815,6 +1316,8 @@ class Permits(BaseSDK):
                 security_source=get_security_from_env(
                     self.sdk_configuration.security, models.Security
                 ),
+                tags=["Permits"],
+                extensions=None,
             ),
             request=req,
             is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
@@ -829,6 +1332,9 @@ class Permits(BaseSDK):
                 errors.HTTPValidationErrorData, http_res
             )
             raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
         if utils.match_response(http_res, "4XX", "*"):
             http_res_text = utils.stream_to_text(http_res)
             raise errors.PermitstackDefaultError(
@@ -852,8 +1358,10 @@ class Permits(BaseSDK):
         jurisdiction: OptionalNullable[str] = UNSET,
         permit_id: OptionalNullable[str] = UNSET,
         detected_after: OptionalNullable[datetime] = UNSET,
+        cursor: OptionalNullable[str] = UNSET,
         page: Optional[int] = 1,
         per_page: Optional[int] = 50,
+        limit: OptionalNullable[int] = UNSET,
         retries: OptionalNullable[utils.RetryConfig] = UNSET,
         server_url: Optional[str] = None,
         timeout_ms: Optional[int] = None,
@@ -861,20 +1369,68 @@ class Permits(BaseSDK):
     ) -> models.PermitEventsResponse:
         r"""List Permit Events
 
-        Queryable feed of permit status/date transitions (new_permit, status_change,
-        issued, completed, expired), built from a daily-ingest diff. A real-time,
-        historical, filter-scoped change feed no competitor offers below enterprise —
-        pair it with a webhook to be alerted the moment a matching permit changes status.
+        What CHANGED, instead of re-reading everything: permit transitions
+        (new_permit, status_change, issued, completed, expired) built from the daily
+        ingest diff, filterable by city, state, category and jurisdiction.
 
-        :param event_type: Filter by event type: new_permit, status_change, issued, completed, expired
+        **This is the endpoint to poll on a schedule, and `cursor` is how to poll it.**
+        Save the `next_cursor` from each response and pass it back as `cursor` on the
+        next call; you then receive only what you have not already seen, in the order it
+        was detected, with no duplicates and no gap. Page until a response comes back
+        shorter than `per_page`, save that last `next_cursor`, and resume there tomorrow.
+
+        **WHERE YOU START MATTERS, AND THE FIRST CALL DOES NOT START AT THE BEGINNING.**
+        A call with NO cursor returns the NEWEST events and its `next_cursor` is the
+        frontier -- a watermark at \"now\". Pass it straight back and you correctly get 0
+        results, because you have just declared yourself caught up. That is exactly what
+        a poller wants: from here on you receive everything new. It is NOT a backfill,
+        and it will not walk history for you -- there are 75,544 events behind that
+        watermark for the Tampa filter below alone.
+
+        To start somewhere else, build the cursor yourself: it is
+        `<ISO-8601 timestamp>|<event id>`, and `|0` is a valid id floor.
+
+        # start polling from now (typical):
+        GET /v1/permits/events?city=Tampa&state=FL&category=roofing
+        &event_type=new_permit                       -> save next_cursor
+        # ...then, from the next call onward:
+        GET ...&cursor=2026-09-08T04%3A09%3A16.381111%2B00%3A00%7C51823904
+
+        # start from a chosen point instead (backfill the last 30 days, then keep polling):
+        GET ...&cursor=2026-08-11T00%3A00%3A00%2B00%3A00%7C0
+
+        One call answers what a paged re-pull of /v1/permits/search costs hundreds of.
+        Measured 2026-09-09, that Tampa query returns **38 records in a single call**;
+        the same question asked by re-pulling search pages 1-100 twelve times a day
+        costs ~9,600 requests and runs into the daily cap.
+
+        `detected_after` still works and is fine for an ad-hoc look at a window, but it
+        is the wrong tool for a poller: it is INCLUSIVE, and one ingest batch stamps
+        thousands of events with a single identical `detected_at` (measured 2026-09-10:
+        3,688 timestamps carry over 1,000 events each, the largest 1,370,561). A poller
+        that stores the newest `detected_at` and passes it back therefore re-receives
+        that whole batch every time. `cursor` breaks the tie on the event id and does not.
+
+        Supplying a `cursor` returns events oldest-unseen first, which is what lets a
+        batch be paged safely; without one you get the newest first, for browsing.
+        `cursor` and `page` are alternatives -- passing both is a 400 rather than a
+        silently skipped page.
+
+        Ingest runs once a day, so a daily poll is enough; `detected_at` is when WE saw
+        the change, not when the city recorded it. For push instead of poll, register a
+        webhook (developer tier and above) and skip the polling entirely.
+
+        :param event_type: Filter by event type: new_permit, status_change, issued, completed, expired (the permit's expiration date has passed without it being finished; emitted when that date arrives)
         :param category: Permit category (e.g. solar, battery)
         :param city: City name
         :param state: 2-letter state code
         :param jurisdiction: Jurisdiction name (partial)
         :param permit_id: Events for a single permit id
-        :param detected_after: Only events detected on/after this UTC timestamp (ISO 8601)
+        :param detected_after: Only events detected on/after this UTC timestamp (ISO 8601). Inclusive, so a batch sharing one timestamp is re-delivered; prefer `cursor` for polling.
+        :param cursor: Opaque cursor from the previous response's `next_cursor`. Resumes exactly where you stopped, with no duplicates and no gap. Omit on the first call.
         :param page:
         :param per_page:
+        :param limit: Alias of `per_page`. Clamped to 100, not rejected.
         :param retries: Override the default retry configuration for this method
         :param server_url: Override the default server URL for this method
         :param timeout_ms: Override the default request timeout configuration for this method in milliseconds
@@ -884,6 +1440,9 @@ class Permits(BaseSDK):
         url_variables = None
         if timeout_ms is None:
             timeout_ms = self.sdk_configuration.timeout_ms
+
+        if timeout_ms is None:
+            timeout_ms = 120000
 
         if server_url is not None:
             base_url = server_url
@@ -898,8 +1457,10 @@ class Permits(BaseSDK):
             jurisdiction=jurisdiction,
             permit_id=permit_id,
             detected_after=detected_after,
+            cursor=cursor,
             page=page,
             per_page=per_page,
+            limit=limit,
         )
 
         req = self._build_request_async(
@@ -936,6 +1497,8 @@ class Permits(BaseSDK):
                 security_source=get_security_from_env(
                     self.sdk_configuration.security, models.Security
                 ),
+                tags=["Permits"],
+                extensions=None,
             ),
             request=req,
             is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
@@ -950,6 +1513,9 @@ class Permits(BaseSDK):
                 errors.HTTPValidationErrorData, http_res
             )
             raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
         if utils.match_response(http_res, "4XX", "*"):
             http_res_text = await utils.stream_to_text_async(http_res)
             raise errors.PermitstackDefaultError(
@@ -987,6 +1553,9 @@ class Permits(BaseSDK):
         if timeout_ms is None:
             timeout_ms = self.sdk_configuration.timeout_ms
 
+        if timeout_ms is None:
+            timeout_ms = 120000
+
         if server_url is not None:
             base_url = server_url
         else:
@@ -1030,6 +1599,8 @@ class Permits(BaseSDK):
                 security_source=get_security_from_env(
                     self.sdk_configuration.security, models.Security
                 ),
+                tags=["Permits"],
+                extensions=None,
             ),
             request=req,
             is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
@@ -1044,6 +1615,9 @@ class Permits(BaseSDK):
                 errors.HTTPValidationErrorData, http_res
             )
             raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
         if utils.match_response(http_res, "4XX", "*"):
             http_res_text = utils.stream_to_text(http_res)
             raise errors.PermitstackDefaultError(
@@ -1081,6 +1655,9 @@ class Permits(BaseSDK):
         if timeout_ms is None:
             timeout_ms = self.sdk_configuration.timeout_ms
 
+        if timeout_ms is None:
+            timeout_ms = 120000
+
         if server_url is not None:
             base_url = server_url
         else:
@@ -1124,6 +1701,8 @@ class Permits(BaseSDK):
                 security_source=get_security_from_env(
                     self.sdk_configuration.security, models.Security
                 ),
+                tags=["Permits"],
+                extensions=None,
             ),
             request=req,
             is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
@@ -1138,6 +1717,9 @@ class Permits(BaseSDK):
                 errors.HTTPValidationErrorData, http_res
             )
             raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
         if utils.match_response(http_res, "4XX", "*"):
             http_res_text = await utils.stream_to_text_async(http_res)
             raise errors.PermitstackDefaultError(
@@ -1157,6 +1739,7 @@ class Permits(BaseSDK):
         address: str,
         page: Optional[int] = 1,
         per_page: Optional[int] = 25,
+        record_kind: Optional[str] = "permit",
         retries: OptionalNullable[utils.RetryConfig] = UNSET,
         server_url: Optional[str] = None,
         timeout_ms: Optional[int] = None,
@@ -1169,6 +1752,7 @@ class Permits(BaseSDK):
         :param address:
         :param page:
         :param per_page:
+        :param record_kind: 'permit' (default), a specific record_kind, or 'all'.
         :param retries: Override the default retry configuration for this method
         :param server_url: Override the default server URL for this method
         :param timeout_ms: Override the default request timeout configuration for this method in milliseconds
@@ -1179,6 +1763,9 @@ class Permits(BaseSDK):
         if timeout_ms is None:
             timeout_ms = self.sdk_configuration.timeout_ms
 
+        if timeout_ms is None:
+            timeout_ms = 120000
+
         if server_url is not None:
             base_url = server_url
         else:
@@ -1188,6 +1775,7 @@ class Permits(BaseSDK):
             address=address,
             page=page,
             per_page=per_page,
+            record_kind=record_kind,
         )
 
         req = self._build_request(
@@ -1224,6 +1812,8 @@ class Permits(BaseSDK):
                 security_source=get_security_from_env(
                     self.sdk_configuration.security, models.Security
                 ),
+                tags=["Permits"],
+                extensions=None,
             ),
             request=req,
             is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
@@ -1238,6 +1828,9 @@ class Permits(BaseSDK):
                 errors.HTTPValidationErrorData, http_res
             )
             raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
         if utils.match_response(http_res, "4XX", "*"):
             http_res_text = utils.stream_to_text(http_res)
             raise errors.PermitstackDefaultError(
@@ -1257,6 +1850,7 @@ class Permits(BaseSDK):
         address: str,
         page: Optional[int] = 1,
         per_page: Optional[int] = 25,
+        record_kind: Optional[str] = "permit",
         retries: OptionalNullable[utils.RetryConfig] = UNSET,
         server_url: Optional[str] = None,
         timeout_ms: Optional[int] = None,
@@ -1269,6 +1863,7 @@ class Permits(BaseSDK):
         :param address:
         :param page:
         :param per_page:
+        :param record_kind: 'permit' (default), a specific record_kind, or 'all'.
         :param retries: Override the default retry configuration for this method
         :param server_url: Override the default server URL for this method
         :param timeout_ms: Override the default request timeout configuration for this method in milliseconds
@@ -1279,6 +1874,9 @@ class Permits(BaseSDK):
         if timeout_ms is None:
             timeout_ms = self.sdk_configuration.timeout_ms
 
+        if timeout_ms is None:
+            timeout_ms = 120000
+
         if server_url is not None:
             base_url = server_url
         else:
@@ -1288,6 +1886,7 @@ class Permits(BaseSDK):
             address=address,
             page=page,
             per_page=per_page,
+            record_kind=record_kind,
         )
 
         req = self._build_request_async(
@@ -1324,6 +1923,8 @@ class Permits(BaseSDK):
                 security_source=get_security_from_env(
                     self.sdk_configuration.security, models.Security
                 ),
+                tags=["Permits"],
+                extensions=None,
             ),
             request=req,
             is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
@@ -1338,6 +1939,9 @@ class Permits(BaseSDK):
                 errors.HTTPValidationErrorData, http_res
             )
             raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
         if utils.match_response(http_res, "4XX", "*"):
             http_res_text = await utils.stream_to_text_async(http_res)
             raise errors.PermitstackDefaultError(
@@ -1361,7 +1965,14 @@ class Permits(BaseSDK):
     ) -> Any:
         r"""Get Coverage Stats
 
-        Get coverage statistics — total permits, jurisdictions, and breakdown by city.
+        Coverage statistics: total permits, every jurisdiction we hold, and the counties they fall in.
+
+        Each jurisdiction carries `data_through` (the newest permit we actually hold, measured),
+        plus `county` / `county_fips` (the county most of its permits fall in) and `counties`
+        (the full measured mix with a `share` of the sample per county, since some cities straddle
+        a county line). `counties` at the top level is the same data keyed by county, listing the
+        jurisdictions whose permits fall in each one. A null county means not measured, which is
+        the case for statewide feeds that publish no coordinates.
 
         :param retries: Override the default retry configuration for this method
         :param server_url: Override the default server URL for this method
@@ -1372,6 +1983,9 @@ class Permits(BaseSDK):
         url_variables = None
         if timeout_ms is None:
             timeout_ms = self.sdk_configuration.timeout_ms
+
+        if timeout_ms is None:
+            timeout_ms = 120000
 
         if server_url is not None:
             base_url = server_url
@@ -1411,14 +2025,20 @@ class Permits(BaseSDK):
                 security_source=get_security_from_env(
                     self.sdk_configuration.security, models.Security
                 ),
+                tags=["Permits"],
+                extensions=None,
             ),
             request=req,
             is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
             retry_config=retry_config,
         )
 
+        response_data: Any = None
         if utils.match_response(http_res, "200", "application/json"):
             return unmarshal_json_response(Any, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
         if utils.match_response(http_res, "4XX", "*"):
             http_res_text = utils.stream_to_text(http_res)
             raise errors.PermitstackDefaultError(
@@ -1442,7 +2062,14 @@ class Permits(BaseSDK):
     ) -> Any:
         r"""Get Coverage Stats
 
-        Get coverage statistics — total permits, jurisdictions, and breakdown by city.
+        Coverage statistics: total permits, every jurisdiction we hold, and the counties they fall in.
+
+        Each jurisdiction carries `data_through` (the newest permit we actually hold, measured),
+        plus `county` / `county_fips` (the county most of its permits fall in) and `counties`
+        (the full measured mix with a `share` of the sample per county, since some cities straddle
+        a county line). `counties` at the top level is the same data keyed by county, listing the
+        jurisdictions whose permits fall in each one. A null county means not measured, which is
+        the case for statewide feeds that publish no coordinates.
 
         :param retries: Override the default retry configuration for this method
         :param server_url: Override the default server URL for this method
@@ -1453,6 +2080,9 @@ class Permits(BaseSDK):
         url_variables = None
         if timeout_ms is None:
             timeout_ms = self.sdk_configuration.timeout_ms
+
+        if timeout_ms is None:
+            timeout_ms = 120000
 
         if server_url is not None:
             base_url = server_url
@@ -1492,14 +2122,20 @@ class Permits(BaseSDK):
                 security_source=get_security_from_env(
                     self.sdk_configuration.security, models.Security
                 ),
+                tags=["Permits"],
+                extensions=None,
             ),
             request=req,
             is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
             retry_config=retry_config,
         )
 
+        response_data: Any = None
         if utils.match_response(http_res, "200", "application/json"):
             return unmarshal_json_response(Any, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
         if utils.match_response(http_res, "4XX", "*"):
             http_res_text = await utils.stream_to_text_async(http_res)
             raise errors.PermitstackDefaultError(
@@ -1535,6 +2171,9 @@ class Permits(BaseSDK):
         if timeout_ms is None:
             timeout_ms = self.sdk_configuration.timeout_ms
 
+        if timeout_ms is None:
+            timeout_ms = 120000
+
         if server_url is not None:
             base_url = server_url
         else:
@@ -1573,14 +2212,20 @@ class Permits(BaseSDK):
                 security_source=get_security_from_env(
                     self.sdk_configuration.security, models.Security
                 ),
+                tags=["Permits"],
+                extensions=None,
             ),
             request=req,
             is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
             retry_config=retry_config,
         )
 
+        response_data: Any = None
         if utils.match_response(http_res, "200", "application/json"):
             return unmarshal_json_response(Any, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
         if utils.match_response(http_res, "4XX", "*"):
             http_res_text = utils.stream_to_text(http_res)
             raise errors.PermitstackDefaultError(
@@ -1616,6 +2261,9 @@ class Permits(BaseSDK):
         if timeout_ms is None:
             timeout_ms = self.sdk_configuration.timeout_ms
 
+        if timeout_ms is None:
+            timeout_ms = 120000
+
         if server_url is not None:
             base_url = server_url
         else:
@@ -1654,14 +2302,286 @@ class Permits(BaseSDK):
                 security_source=get_security_from_env(
                     self.sdk_configuration.security, models.Security
                 ),
+                tags=["Permits"],
+                extensions=None,
             ),
             request=req,
             is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
             retry_config=retry_config,
         )
 
+        response_data: Any = None
         if utils.match_response(http_res, "200", "application/json"):
             return unmarshal_json_response(Any, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
+        if utils.match_response(http_res, "4XX", "*"):
+            http_res_text = await utils.stream_to_text_async(http_res)
+            raise errors.PermitstackDefaultError(
+                "API error occurred", http_res, http_res_text
+            )
+        if utils.match_response(http_res, "5XX", "*"):
+            http_res_text = await utils.stream_to_text_async(http_res)
+            raise errors.PermitstackDefaultError(
+                "API error occurred", http_res, http_res_text
+            )
+
+        raise errors.PermitstackDefaultError("Unexpected response received", http_res)
+
+    def system_age(
+        self,
+        *,
+        trade: str,
+        state: OptionalNullable[str] = UNSET,
+        city: OptionalNullable[str] = UNSET,
+        zip_code: OptionalNullable[str] = UNSET,
+        jurisdiction: OptionalNullable[str] = UNSET,
+        min_age_years: OptionalNullable[float] = UNSET,
+        max_age_years: OptionalNullable[float] = UNSET,
+        page: Optional[int] = 1,
+        per_page: Optional[int] = 25,
+        retries: OptionalNullable[utils.RetryConfig] = UNSET,
+        server_url: Optional[str] = None,
+        timeout_ms: Optional[int] = None,
+        http_headers: Optional[Mapping[str, str]] = None,
+    ) -> models.PermitSearchResponse:
+        r"""System Age
+
+        Addresses whose LATEST permit in the trade is min–max years old with nothing
+        since — the system is statistically due for replacement. Only trades with a real
+        lifecycle are supported (roofing, hvac, mechanical, solar=repower, pool).
+
+        :param trade: roofing | hvac | mechanical | solar | pool
+        :param state: 2-letter state code
+        :param city: City name
+        :param zip_code: 5-digit ZIP
+        :param jurisdiction: Jurisdiction name (partial)
+        :param min_age_years: Override the trade's default minimum age
+        :param max_age_years: Override the trade's default maximum age
+        :param page:
+        :param per_page:
+        :param retries: Override the default retry configuration for this method
+        :param server_url: Override the default server URL for this method
+        :param timeout_ms: Override the default request timeout configuration for this method in milliseconds
+        :param http_headers: Additional headers to set or replace on requests.
+        """
+        base_url = None
+        url_variables = None
+        if timeout_ms is None:
+            timeout_ms = self.sdk_configuration.timeout_ms
+
+        if timeout_ms is None:
+            timeout_ms = 120000
+
+        if server_url is not None:
+            base_url = server_url
+        else:
+            base_url = self._get_url(base_url, url_variables)
+
+        request = models.SystemAgeRequest(
+            trade=trade,
+            state=state,
+            city=city,
+            zip_code=zip_code,
+            jurisdiction=jurisdiction,
+            min_age_years=min_age_years,
+            max_age_years=max_age_years,
+            page=page,
+            per_page=per_page,
+        )
+
+        req = self._build_request(
+            method="GET",
+            path="/v1/plays/system-age",
+            base_url=base_url,
+            url_variables=url_variables,
+            request=request,
+            request_body_required=False,
+            request_has_path_params=False,
+            request_has_query_params=True,
+            user_agent_header="user-agent",
+            accept_header_value="application/json",
+            http_headers=http_headers,
+            security=self.sdk_configuration.security,
+            allow_empty_value=None,
+            timeout_ms=timeout_ms,
+        )
+
+        if retries == UNSET:
+            if self.sdk_configuration.retry_config is not UNSET:
+                retries = self.sdk_configuration.retry_config
+
+        retry_config = None
+        if isinstance(retries, utils.RetryConfig):
+            retry_config = (retries, ["429", "500", "502", "503", "504"])
+
+        http_res = self.do_request(
+            hook_ctx=HookContext(
+                config=self.sdk_configuration,
+                base_url=base_url or "",
+                operation_id="system_age",
+                oauth2_scopes=None,
+                security_source=get_security_from_env(
+                    self.sdk_configuration.security, models.Security
+                ),
+                tags=["Permits"],
+                extensions=None,
+            ),
+            request=req,
+            is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
+            retry_config=retry_config,
+        )
+
+        response_data: Any = None
+        if utils.match_response(http_res, "200", "application/json"):
+            return unmarshal_json_response(models.PermitSearchResponse, http_res)
+        if utils.match_response(http_res, "403", "application/json"):
+            response_data = unmarshal_json_response(
+                errors.FeatureLockedErrorData, http_res
+            )
+            raise errors.FeatureLockedError(response_data, http_res)
+        if utils.match_response(http_res, "422", "application/json"):
+            response_data = unmarshal_json_response(
+                errors.HTTPValidationErrorData, http_res
+            )
+            raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
+        if utils.match_response(http_res, "4XX", "*"):
+            http_res_text = utils.stream_to_text(http_res)
+            raise errors.PermitstackDefaultError(
+                "API error occurred", http_res, http_res_text
+            )
+        if utils.match_response(http_res, "5XX", "*"):
+            http_res_text = utils.stream_to_text(http_res)
+            raise errors.PermitstackDefaultError(
+                "API error occurred", http_res, http_res_text
+            )
+
+        raise errors.PermitstackDefaultError("Unexpected response received", http_res)
+
+    async def system_age_async(
+        self,
+        *,
+        trade: str,
+        state: OptionalNullable[str] = UNSET,
+        city: OptionalNullable[str] = UNSET,
+        zip_code: OptionalNullable[str] = UNSET,
+        jurisdiction: OptionalNullable[str] = UNSET,
+        min_age_years: OptionalNullable[float] = UNSET,
+        max_age_years: OptionalNullable[float] = UNSET,
+        page: Optional[int] = 1,
+        per_page: Optional[int] = 25,
+        retries: OptionalNullable[utils.RetryConfig] = UNSET,
+        server_url: Optional[str] = None,
+        timeout_ms: Optional[int] = None,
+        http_headers: Optional[Mapping[str, str]] = None,
+    ) -> models.PermitSearchResponse:
+        r"""System Age
+
+        Addresses whose LATEST permit in the trade is min–max years old with nothing
+        since — the system is statistically due for replacement. Only trades with a real
+        lifecycle are supported (roofing, hvac, mechanical, solar=repower, pool).
+
+        :param trade: roofing | hvac | mechanical | solar | pool
+        :param state: 2-letter state code
+        :param city: City name
+        :param zip_code: 5-digit ZIP
+        :param jurisdiction: Jurisdiction name (partial)
+        :param min_age_years: Override the trade's default minimum age
+        :param max_age_years: Override the trade's default maximum age
+        :param page:
+        :param per_page:
+        :param retries: Override the default retry configuration for this method
+        :param server_url: Override the default server URL for this method
+        :param timeout_ms: Override the default request timeout configuration for this method in milliseconds
+        :param http_headers: Additional headers to set or replace on requests.
+        """
+        base_url = None
+        url_variables = None
+        if timeout_ms is None:
+            timeout_ms = self.sdk_configuration.timeout_ms
+
+        if timeout_ms is None:
+            timeout_ms = 120000
+
+        if server_url is not None:
+            base_url = server_url
+        else:
+            base_url = self._get_url(base_url, url_variables)
+
+        request = models.SystemAgeRequest(
+            trade=trade,
+            state=state,
+            city=city,
+            zip_code=zip_code,
+            jurisdiction=jurisdiction,
+            min_age_years=min_age_years,
+            max_age_years=max_age_years,
+            page=page,
+            per_page=per_page,
+        )
+
+        req = self._build_request_async(
+            method="GET",
+            path="/v1/plays/system-age",
+            base_url=base_url,
+            url_variables=url_variables,
+            request=request,
+            request_body_required=False,
+            request_has_path_params=False,
+            request_has_query_params=True,
+            user_agent_header="user-agent",
+            accept_header_value="application/json",
+            http_headers=http_headers,
+            security=self.sdk_configuration.security,
+            allow_empty_value=None,
+            timeout_ms=timeout_ms,
+        )
+
+        if retries == UNSET:
+            if self.sdk_configuration.retry_config is not UNSET:
+                retries = self.sdk_configuration.retry_config
+
+        retry_config = None
+        if isinstance(retries, utils.RetryConfig):
+            retry_config = (retries, ["429", "500", "502", "503", "504"])
+
+        http_res = await self.do_request_async(
+            hook_ctx=HookContext(
+                config=self.sdk_configuration,
+                base_url=base_url or "",
+                operation_id="system_age",
+                oauth2_scopes=None,
+                security_source=get_security_from_env(
+                    self.sdk_configuration.security, models.Security
+                ),
+                tags=["Permits"],
+                extensions=None,
+            ),
+            request=req,
+            is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
+            retry_config=retry_config,
+        )
+
+        response_data: Any = None
+        if utils.match_response(http_res, "200", "application/json"):
+            return unmarshal_json_response(models.PermitSearchResponse, http_res)
+        if utils.match_response(http_res, "403", "application/json"):
+            response_data = unmarshal_json_response(
+                errors.FeatureLockedErrorData, http_res
+            )
+            raise errors.FeatureLockedError(response_data, http_res)
+        if utils.match_response(http_res, "422", "application/json"):
+            response_data = unmarshal_json_response(
+                errors.HTTPValidationErrorData, http_res
+            )
+            raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
         if utils.match_response(http_res, "4XX", "*"):
             http_res_text = await utils.stream_to_text_async(http_res)
             raise errors.PermitstackDefaultError(
@@ -1682,8 +2602,8 @@ class Permits(BaseSDK):
         city: OptionalNullable[str] = UNSET,
         zip_code: OptionalNullable[str] = UNSET,
         jurisdiction: OptionalNullable[str] = UNSET,
-        min_age_years: Optional[float] = 2,
-        max_age_years: Optional[float] = 7,
+        min_age_years: Optional[float] = 2.0,
+        max_age_years: Optional[float] = 7.0,
         page: Optional[int] = 1,
         per_page: Optional[int] = 25,
         retries: OptionalNullable[utils.RetryConfig] = UNSET,
@@ -1713,6 +2633,9 @@ class Permits(BaseSDK):
         url_variables = None
         if timeout_ms is None:
             timeout_ms = self.sdk_configuration.timeout_ms
+
+        if timeout_ms is None:
+            timeout_ms = 120000
 
         if server_url is not None:
             base_url = server_url
@@ -1764,6 +2687,8 @@ class Permits(BaseSDK):
                 security_source=get_security_from_env(
                     self.sdk_configuration.security, models.Security
                 ),
+                tags=["Permits"],
+                extensions=None,
             ),
             request=req,
             is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
@@ -1773,11 +2698,19 @@ class Permits(BaseSDK):
         response_data: Any = None
         if utils.match_response(http_res, "200", "application/json"):
             return unmarshal_json_response(models.PermitSearchResponse, http_res)
+        if utils.match_response(http_res, "403", "application/json"):
+            response_data = unmarshal_json_response(
+                errors.FeatureLockedErrorData, http_res
+            )
+            raise errors.FeatureLockedError(response_data, http_res)
         if utils.match_response(http_res, "422", "application/json"):
             response_data = unmarshal_json_response(
                 errors.HTTPValidationErrorData, http_res
             )
             raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
         if utils.match_response(http_res, "4XX", "*"):
             http_res_text = utils.stream_to_text(http_res)
             raise errors.PermitstackDefaultError(
@@ -1798,8 +2731,8 @@ class Permits(BaseSDK):
         city: OptionalNullable[str] = UNSET,
         zip_code: OptionalNullable[str] = UNSET,
         jurisdiction: OptionalNullable[str] = UNSET,
-        min_age_years: Optional[float] = 2,
-        max_age_years: Optional[float] = 7,
+        min_age_years: Optional[float] = 2.0,
+        max_age_years: Optional[float] = 7.0,
         page: Optional[int] = 1,
         per_page: Optional[int] = 25,
         retries: OptionalNullable[utils.RetryConfig] = UNSET,
@@ -1829,6 +2762,9 @@ class Permits(BaseSDK):
         url_variables = None
         if timeout_ms is None:
             timeout_ms = self.sdk_configuration.timeout_ms
+
+        if timeout_ms is None:
+            timeout_ms = 120000
 
         if server_url is not None:
             base_url = server_url
@@ -1880,6 +2816,8 @@ class Permits(BaseSDK):
                 security_source=get_security_from_env(
                     self.sdk_configuration.security, models.Security
                 ),
+                tags=["Permits"],
+                extensions=None,
             ),
             request=req,
             is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
@@ -1889,11 +2827,279 @@ class Permits(BaseSDK):
         response_data: Any = None
         if utils.match_response(http_res, "200", "application/json"):
             return unmarshal_json_response(models.PermitSearchResponse, http_res)
+        if utils.match_response(http_res, "403", "application/json"):
+            response_data = unmarshal_json_response(
+                errors.FeatureLockedErrorData, http_res
+            )
+            raise errors.FeatureLockedError(response_data, http_res)
         if utils.match_response(http_res, "422", "application/json"):
             response_data = unmarshal_json_response(
                 errors.HTTPValidationErrorData, http_res
             )
             raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
+        if utils.match_response(http_res, "4XX", "*"):
+            http_res_text = await utils.stream_to_text_async(http_res)
+            raise errors.PermitstackDefaultError(
+                "API error occurred", http_res, http_res_text
+            )
+        if utils.match_response(http_res, "5XX", "*"):
+            http_res_text = await utils.stream_to_text_async(http_res)
+            raise errors.PermitstackDefaultError(
+                "API error occurred", http_res, http_res_text
+            )
+
+        raise errors.PermitstackDefaultError("Unexpected response received", http_res)
+
+    def reroof_due(
+        self,
+        *,
+        state: OptionalNullable[str] = UNSET,
+        city: OptionalNullable[str] = UNSET,
+        zip_code: OptionalNullable[str] = UNSET,
+        jurisdiction: OptionalNullable[str] = UNSET,
+        min_age_years: Optional[float] = 12.0,
+        max_age_years: Optional[float] = 25.0,
+        page: Optional[int] = 1,
+        per_page: Optional[int] = 25,
+        retries: OptionalNullable[utils.RetryConfig] = UNSET,
+        server_url: Optional[str] = None,
+        timeout_ms: Optional[int] = None,
+        http_headers: Optional[Mapping[str, str]] = None,
+    ) -> models.PermitSearchResponse:
+        r"""Reroof Due
+
+        Roofing permits aged min-max years whose address has NO newer roofing permit —
+        homes whose roof is statistically due for replacement. Alias of
+        /v1/plays/system-age?trade=roofing (kept as the discoverable roofing-first name).
+
+        :param state: 2-letter state code
+        :param city: City name
+        :param zip_code: 5-digit ZIP
+        :param jurisdiction: Jurisdiction name (partial)
+        :param min_age_years: Minimum age of the roofing permit, in years
+        :param max_age_years: Maximum age of the roofing permit, in years
+        :param page:
+        :param per_page:
+        :param retries: Override the default retry configuration for this method
+        :param server_url: Override the default server URL for this method
+        :param timeout_ms: Override the default request timeout configuration for this method in milliseconds
+        :param http_headers: Additional headers to set or replace on requests.
+        """
+        base_url = None
+        url_variables = None
+        if timeout_ms is None:
+            timeout_ms = self.sdk_configuration.timeout_ms
+
+        if timeout_ms is None:
+            timeout_ms = 120000
+
+        if server_url is not None:
+            base_url = server_url
+        else:
+            base_url = self._get_url(base_url, url_variables)
+
+        request = models.ReroofDueRequest(
+            state=state,
+            city=city,
+            zip_code=zip_code,
+            jurisdiction=jurisdiction,
+            min_age_years=min_age_years,
+            max_age_years=max_age_years,
+            page=page,
+            per_page=per_page,
+        )
+
+        req = self._build_request(
+            method="GET",
+            path="/v1/plays/reroof-due",
+            base_url=base_url,
+            url_variables=url_variables,
+            request=request,
+            request_body_required=False,
+            request_has_path_params=False,
+            request_has_query_params=True,
+            user_agent_header="user-agent",
+            accept_header_value="application/json",
+            http_headers=http_headers,
+            security=self.sdk_configuration.security,
+            allow_empty_value=None,
+            timeout_ms=timeout_ms,
+        )
+
+        if retries == UNSET:
+            if self.sdk_configuration.retry_config is not UNSET:
+                retries = self.sdk_configuration.retry_config
+
+        retry_config = None
+        if isinstance(retries, utils.RetryConfig):
+            retry_config = (retries, ["429", "500", "502", "503", "504"])
+
+        http_res = self.do_request(
+            hook_ctx=HookContext(
+                config=self.sdk_configuration,
+                base_url=base_url or "",
+                operation_id="reroof_due",
+                oauth2_scopes=None,
+                security_source=get_security_from_env(
+                    self.sdk_configuration.security, models.Security
+                ),
+                tags=["Permits"],
+                extensions=None,
+            ),
+            request=req,
+            is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
+            retry_config=retry_config,
+        )
+
+        response_data: Any = None
+        if utils.match_response(http_res, "200", "application/json"):
+            return unmarshal_json_response(models.PermitSearchResponse, http_res)
+        if utils.match_response(http_res, "403", "application/json"):
+            response_data = unmarshal_json_response(
+                errors.FeatureLockedErrorData, http_res
+            )
+            raise errors.FeatureLockedError(response_data, http_res)
+        if utils.match_response(http_res, "422", "application/json"):
+            response_data = unmarshal_json_response(
+                errors.HTTPValidationErrorData, http_res
+            )
+            raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
+        if utils.match_response(http_res, "4XX", "*"):
+            http_res_text = utils.stream_to_text(http_res)
+            raise errors.PermitstackDefaultError(
+                "API error occurred", http_res, http_res_text
+            )
+        if utils.match_response(http_res, "5XX", "*"):
+            http_res_text = utils.stream_to_text(http_res)
+            raise errors.PermitstackDefaultError(
+                "API error occurred", http_res, http_res_text
+            )
+
+        raise errors.PermitstackDefaultError("Unexpected response received", http_res)
+
+    async def reroof_due_async(
+        self,
+        *,
+        state: OptionalNullable[str] = UNSET,
+        city: OptionalNullable[str] = UNSET,
+        zip_code: OptionalNullable[str] = UNSET,
+        jurisdiction: OptionalNullable[str] = UNSET,
+        min_age_years: Optional[float] = 12.0,
+        max_age_years: Optional[float] = 25.0,
+        page: Optional[int] = 1,
+        per_page: Optional[int] = 25,
+        retries: OptionalNullable[utils.RetryConfig] = UNSET,
+        server_url: Optional[str] = None,
+        timeout_ms: Optional[int] = None,
+        http_headers: Optional[Mapping[str, str]] = None,
+    ) -> models.PermitSearchResponse:
+        r"""Reroof Due
+
+        Roofing permits aged min-max years whose address has NO newer roofing permit —
+        homes whose roof is statistically due for replacement. Alias of
+        /v1/plays/system-age?trade=roofing (kept as the discoverable roofing-first name).
+
+        :param state: 2-letter state code
+        :param city: City name
+        :param zip_code: 5-digit ZIP
+        :param jurisdiction: Jurisdiction name (partial)
+        :param min_age_years: Minimum age of the roofing permit, in years
+        :param max_age_years: Maximum age of the roofing permit, in years
+        :param page:
+        :param per_page:
+        :param retries: Override the default retry configuration for this method
+        :param server_url: Override the default server URL for this method
+        :param timeout_ms: Override the default request timeout configuration for this method in milliseconds
+        :param http_headers: Additional headers to set or replace on requests.
+        """
+        base_url = None
+        url_variables = None
+        if timeout_ms is None:
+            timeout_ms = self.sdk_configuration.timeout_ms
+
+        if timeout_ms is None:
+            timeout_ms = 120000
+
+        if server_url is not None:
+            base_url = server_url
+        else:
+            base_url = self._get_url(base_url, url_variables)
+
+        request = models.ReroofDueRequest(
+            state=state,
+            city=city,
+            zip_code=zip_code,
+            jurisdiction=jurisdiction,
+            min_age_years=min_age_years,
+            max_age_years=max_age_years,
+            page=page,
+            per_page=per_page,
+        )
+
+        req = self._build_request_async(
+            method="GET",
+            path="/v1/plays/reroof-due",
+            base_url=base_url,
+            url_variables=url_variables,
+            request=request,
+            request_body_required=False,
+            request_has_path_params=False,
+            request_has_query_params=True,
+            user_agent_header="user-agent",
+            accept_header_value="application/json",
+            http_headers=http_headers,
+            security=self.sdk_configuration.security,
+            allow_empty_value=None,
+            timeout_ms=timeout_ms,
+        )
+
+        if retries == UNSET:
+            if self.sdk_configuration.retry_config is not UNSET:
+                retries = self.sdk_configuration.retry_config
+
+        retry_config = None
+        if isinstance(retries, utils.RetryConfig):
+            retry_config = (retries, ["429", "500", "502", "503", "504"])
+
+        http_res = await self.do_request_async(
+            hook_ctx=HookContext(
+                config=self.sdk_configuration,
+                base_url=base_url or "",
+                operation_id="reroof_due",
+                oauth2_scopes=None,
+                security_source=get_security_from_env(
+                    self.sdk_configuration.security, models.Security
+                ),
+                tags=["Permits"],
+                extensions=None,
+            ),
+            request=req,
+            is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
+            retry_config=retry_config,
+        )
+
+        response_data: Any = None
+        if utils.match_response(http_res, "200", "application/json"):
+            return unmarshal_json_response(models.PermitSearchResponse, http_res)
+        if utils.match_response(http_res, "403", "application/json"):
+            response_data = unmarshal_json_response(
+                errors.FeatureLockedErrorData, http_res
+            )
+            raise errors.FeatureLockedError(response_data, http_res)
+        if utils.match_response(http_res, "422", "application/json"):
+            response_data = unmarshal_json_response(
+                errors.HTTPValidationErrorData, http_res
+            )
+            raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
         if utils.match_response(http_res, "4XX", "*"):
             http_res_text = await utils.stream_to_text_async(http_res)
             raise errors.PermitstackDefaultError(
@@ -1944,6 +3150,9 @@ class Permits(BaseSDK):
         if timeout_ms is None:
             timeout_ms = self.sdk_configuration.timeout_ms
 
+        if timeout_ms is None:
+            timeout_ms = 120000
+
         if server_url is not None:
             base_url = server_url
         else:
@@ -1993,6 +3202,8 @@ class Permits(BaseSDK):
                 security_source=get_security_from_env(
                     self.sdk_configuration.security, models.Security
                 ),
+                tags=["Permits"],
+                extensions=None,
             ),
             request=req,
             is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
@@ -2002,11 +3213,19 @@ class Permits(BaseSDK):
         response_data: Any = None
         if utils.match_response(http_res, "200", "application/json"):
             return unmarshal_json_response(models.PermitSearchResponse, http_res)
+        if utils.match_response(http_res, "403", "application/json"):
+            response_data = unmarshal_json_response(
+                errors.FeatureLockedErrorData, http_res
+            )
+            raise errors.FeatureLockedError(response_data, http_res)
         if utils.match_response(http_res, "422", "application/json"):
             response_data = unmarshal_json_response(
                 errors.HTTPValidationErrorData, http_res
             )
             raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
         if utils.match_response(http_res, "4XX", "*"):
             http_res_text = utils.stream_to_text(http_res)
             raise errors.PermitstackDefaultError(
@@ -2057,6 +3276,9 @@ class Permits(BaseSDK):
         if timeout_ms is None:
             timeout_ms = self.sdk_configuration.timeout_ms
 
+        if timeout_ms is None:
+            timeout_ms = 120000
+
         if server_url is not None:
             base_url = server_url
         else:
@@ -2106,6 +3328,8 @@ class Permits(BaseSDK):
                 security_source=get_security_from_env(
                     self.sdk_configuration.security, models.Security
                 ),
+                tags=["Permits"],
+                extensions=None,
             ),
             request=req,
             is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
@@ -2115,11 +3339,207 @@ class Permits(BaseSDK):
         response_data: Any = None
         if utils.match_response(http_res, "200", "application/json"):
             return unmarshal_json_response(models.PermitSearchResponse, http_res)
+        if utils.match_response(http_res, "403", "application/json"):
+            response_data = unmarshal_json_response(
+                errors.FeatureLockedErrorData, http_res
+            )
+            raise errors.FeatureLockedError(response_data, http_res)
         if utils.match_response(http_res, "422", "application/json"):
             response_data = unmarshal_json_response(
                 errors.HTTPValidationErrorData, http_res
             )
             raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
+        if utils.match_response(http_res, "4XX", "*"):
+            http_res_text = await utils.stream_to_text_async(http_res)
+            raise errors.PermitstackDefaultError(
+                "API error occurred", http_res, http_res_text
+            )
+        if utils.match_response(http_res, "5XX", "*"):
+            http_res_text = await utils.stream_to_text_async(http_res)
+            raise errors.PermitstackDefaultError(
+                "API error occurred", http_res, http_res_text
+            )
+
+        raise errors.PermitstackDefaultError("Unexpected response received", http_res)
+
+    def list_covered_jurisdictions(
+        self,
+        *,
+        retries: OptionalNullable[utils.RetryConfig] = UNSET,
+        server_url: Optional[str] = None,
+        timeout_ms: Optional[int] = None,
+        http_headers: Optional[Mapping[str, str]] = None,
+    ) -> Any:
+        r"""List Covered Jurisdictions
+
+        Every jurisdiction we cover, with how current and how complete each one is.
+
+        `data_through` is the newest permit we actually hold, measured -- not when we last
+        polled the source. `freshness_label` and `completeness_label` are the same sentences the
+        export picker and the delivered manifest use, so this can never disagree with them.
+
+        :param retries: Override the default retry configuration for this method
+        :param server_url: Override the default server URL for this method
+        :param timeout_ms: Override the default request timeout configuration for this method in milliseconds
+        :param http_headers: Additional headers to set or replace on requests.
+        """
+        base_url = None
+        url_variables = None
+        if timeout_ms is None:
+            timeout_ms = self.sdk_configuration.timeout_ms
+
+        if timeout_ms is None:
+            timeout_ms = 120000
+
+        if server_url is not None:
+            base_url = server_url
+        else:
+            base_url = self._get_url(base_url, url_variables)
+        req = self._build_request(
+            method="GET",
+            path="/v1/jurisdictions",
+            base_url=base_url,
+            url_variables=url_variables,
+            request=None,
+            request_body_required=False,
+            request_has_path_params=False,
+            request_has_query_params=True,
+            user_agent_header="user-agent",
+            accept_header_value="application/json",
+            http_headers=http_headers,
+            security=self.sdk_configuration.security,
+            allow_empty_value=None,
+            timeout_ms=timeout_ms,
+        )
+
+        if retries == UNSET:
+            if self.sdk_configuration.retry_config is not UNSET:
+                retries = self.sdk_configuration.retry_config
+
+        retry_config = None
+        if isinstance(retries, utils.RetryConfig):
+            retry_config = (retries, ["429", "500", "502", "503", "504"])
+
+        http_res = self.do_request(
+            hook_ctx=HookContext(
+                config=self.sdk_configuration,
+                base_url=base_url or "",
+                operation_id="list_covered_jurisdictions",
+                oauth2_scopes=None,
+                security_source=get_security_from_env(
+                    self.sdk_configuration.security, models.Security
+                ),
+                tags=["Permits"],
+                extensions=None,
+            ),
+            request=req,
+            is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
+            retry_config=retry_config,
+        )
+
+        response_data: Any = None
+        if utils.match_response(http_res, "200", "application/json"):
+            return unmarshal_json_response(Any, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
+        if utils.match_response(http_res, "4XX", "*"):
+            http_res_text = utils.stream_to_text(http_res)
+            raise errors.PermitstackDefaultError(
+                "API error occurred", http_res, http_res_text
+            )
+        if utils.match_response(http_res, "5XX", "*"):
+            http_res_text = utils.stream_to_text(http_res)
+            raise errors.PermitstackDefaultError(
+                "API error occurred", http_res, http_res_text
+            )
+
+        raise errors.PermitstackDefaultError("Unexpected response received", http_res)
+
+    async def list_covered_jurisdictions_async(
+        self,
+        *,
+        retries: OptionalNullable[utils.RetryConfig] = UNSET,
+        server_url: Optional[str] = None,
+        timeout_ms: Optional[int] = None,
+        http_headers: Optional[Mapping[str, str]] = None,
+    ) -> Any:
+        r"""List Covered Jurisdictions
+
+        Every jurisdiction we cover, with how current and how complete each one is.
+
+        `data_through` is the newest permit we actually hold, measured -- not when we last
+        polled the source. `freshness_label` and `completeness_label` are the same sentences the
+        export picker and the delivered manifest use, so this can never disagree with them.
+
+        :param retries: Override the default retry configuration for this method
+        :param server_url: Override the default server URL for this method
+        :param timeout_ms: Override the default request timeout configuration for this method in milliseconds
+        :param http_headers: Additional headers to set or replace on requests.
+        """
+        base_url = None
+        url_variables = None
+        if timeout_ms is None:
+            timeout_ms = self.sdk_configuration.timeout_ms
+
+        if timeout_ms is None:
+            timeout_ms = 120000
+
+        if server_url is not None:
+            base_url = server_url
+        else:
+            base_url = self._get_url(base_url, url_variables)
+        req = self._build_request_async(
+            method="GET",
+            path="/v1/jurisdictions",
+            base_url=base_url,
+            url_variables=url_variables,
+            request=None,
+            request_body_required=False,
+            request_has_path_params=False,
+            request_has_query_params=True,
+            user_agent_header="user-agent",
+            accept_header_value="application/json",
+            http_headers=http_headers,
+            security=self.sdk_configuration.security,
+            allow_empty_value=None,
+            timeout_ms=timeout_ms,
+        )
+
+        if retries == UNSET:
+            if self.sdk_configuration.retry_config is not UNSET:
+                retries = self.sdk_configuration.retry_config
+
+        retry_config = None
+        if isinstance(retries, utils.RetryConfig):
+            retry_config = (retries, ["429", "500", "502", "503", "504"])
+
+        http_res = await self.do_request_async(
+            hook_ctx=HookContext(
+                config=self.sdk_configuration,
+                base_url=base_url or "",
+                operation_id="list_covered_jurisdictions",
+                oauth2_scopes=None,
+                security_source=get_security_from_env(
+                    self.sdk_configuration.security, models.Security
+                ),
+                tags=["Permits"],
+                extensions=None,
+            ),
+            request=req,
+            is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
+            retry_config=retry_config,
+        )
+
+        response_data: Any = None
+        if utils.match_response(http_res, "200", "application/json"):
+            return unmarshal_json_response(Any, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
         if utils.match_response(http_res, "4XX", "*"):
             http_res_text = await utils.stream_to_text_async(http_res)
             raise errors.PermitstackDefaultError(

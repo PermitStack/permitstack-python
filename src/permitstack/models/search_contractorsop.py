@@ -23,6 +23,10 @@ class SearchContractorsRequestTypedDict(TypedDict):
     r"""City name"""
     specialty: NotRequired[Nullable[str]]
     r"""Specialty tag (e.g. solar, roofing, hvac)"""
+    license_number: NotRequired[Nullable[str]]
+    r"""Exact state licence number, e.g. 'CBC1262595'. Matched exactly, and also tried uppercased -- so any capitalisation works for the licences stored uppercase, which is 99.96% of them. Combine with license_state when the same number is issued in more than one state."""
+    license_state: NotRequired[Nullable[str]]
+    r"""2-letter state that ISSUED the licence. Not the same as `state`, which is where the contractor pulls permits."""
     min_permits: NotRequired[Nullable[int]]
     r"""Minimum total permits"""
     min_score: NotRequired[Nullable[int]]
@@ -57,6 +61,18 @@ class SearchContractorsRequest(BaseModel):
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
     ] = UNSET
     r"""Specialty tag (e.g. solar, roofing, hvac)"""
+
+    license_number: Annotated[
+        OptionalNullable[str],
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+    r"""Exact state licence number, e.g. 'CBC1262595'. Matched exactly, and also tried uppercased -- so any capitalisation works for the licences stored uppercase, which is 99.96% of them. Combine with license_state when the same number is issued in more than one state."""
+
+    license_state: Annotated[
+        OptionalNullable[str],
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+    r"""2-letter state that ISSUED the licence. Not the same as `state`, which is where the contractor pulls permits."""
 
     min_permits: Annotated[
         OptionalNullable[int],
@@ -94,6 +110,8 @@ class SearchContractorsRequest(BaseModel):
                 "state",
                 "city",
                 "specialty",
+                "license_number",
+                "license_state",
                 "min_permits",
                 "min_score",
                 "sort",
@@ -102,7 +120,16 @@ class SearchContractorsRequest(BaseModel):
             ]
         )
         nullable_fields = set(
-            ["name", "state", "city", "specialty", "min_permits", "min_score"]
+            [
+                "name",
+                "state",
+                "city",
+                "specialty",
+                "license_number",
+                "license_state",
+                "min_permits",
+                "min_score",
+            ]
         )
         serialized = handler(self)
         m = {}

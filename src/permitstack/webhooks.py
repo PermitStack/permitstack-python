@@ -10,7 +10,7 @@ from typing import Any, Mapping, Optional
 
 
 class Webhooks(BaseSDK):
-    r"""Subscribe to real-time permit events (paid tiers)"""
+    r"""New and changed permits pushed to your endpoint about 60 seconds after we ingest them; most sources are ingested nightly. Developer plan ($79/mo) and above."""
 
     def list_webhooks(
         self,
@@ -33,6 +33,9 @@ class Webhooks(BaseSDK):
         url_variables = None
         if timeout_ms is None:
             timeout_ms = self.sdk_configuration.timeout_ms
+
+        if timeout_ms is None:
+            timeout_ms = 120000
 
         if server_url is not None:
             base_url = server_url
@@ -72,14 +75,20 @@ class Webhooks(BaseSDK):
                 security_source=get_security_from_env(
                     self.sdk_configuration.security, models.Security
                 ),
+                tags=["Webhooks"],
+                extensions=None,
             ),
             request=req,
             is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
             retry_config=retry_config,
         )
 
+        response_data: Any = None
         if utils.match_response(http_res, "200", "application/json"):
             return unmarshal_json_response(Any, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
         if utils.match_response(http_res, "4XX", "*"):
             http_res_text = utils.stream_to_text(http_res)
             raise errors.PermitstackDefaultError(
@@ -115,6 +124,9 @@ class Webhooks(BaseSDK):
         if timeout_ms is None:
             timeout_ms = self.sdk_configuration.timeout_ms
 
+        if timeout_ms is None:
+            timeout_ms = 120000
+
         if server_url is not None:
             base_url = server_url
         else:
@@ -153,14 +165,20 @@ class Webhooks(BaseSDK):
                 security_source=get_security_from_env(
                     self.sdk_configuration.security, models.Security
                 ),
+                tags=["Webhooks"],
+                extensions=None,
             ),
             request=req,
             is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
             retry_config=retry_config,
         )
 
+        response_data: Any = None
         if utils.match_response(http_res, "200", "application/json"):
             return unmarshal_json_response(Any, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
         if utils.match_response(http_res, "4XX", "*"):
             http_res_text = await utils.stream_to_text_async(http_res)
             raise errors.PermitstackDefaultError(
@@ -182,7 +200,8 @@ class Webhooks(BaseSDK):
         state: OptionalNullable[str] = UNSET,
         category: OptionalNullable[str] = UNSET,
         zip_code: OptionalNullable[str] = UNSET,
-        description: OptionalNullable[str] = UNSET,
+        keyword: OptionalNullable[str] = UNSET,
+        contractor_name: OptionalNullable[str] = UNSET,
         retries: OptionalNullable[utils.RetryConfig] = UNSET,
         server_url: Optional[str] = None,
         timeout_ms: Optional[int] = None,
@@ -192,16 +211,19 @@ class Webhooks(BaseSDK):
 
         Register a webhook to be notified when new permits match your filters.
 
-        Available on the Developer plan and above (see /v1/billing/plans for current pricing).
-    Maximum 10 webhooks per API key.
+        Available on the Developer plan and above (see /v1/billing/plans for current
+        pricing). Maximum 10 webhooks per API key.
         When a new permit matches your filters, we'll POST the permit data as JSON to your URL.
+        Set contractor_name to track a specific company — you'll get a POST within minutes
+        of any permit they pull appearing in our data (competitor tracking).
 
         :param url:
         :param city:
         :param state:
         :param category:
         :param zip_code:
-        :param description:
+        :param keyword:
+        :param contractor_name: Fire only for permits pulled by contractors whose name contains this text (case-insensitive) — track a competitor or partner as their new permits arrive.
         :param retries: Override the default retry configuration for this method
         :param server_url: Override the default server URL for this method
         :param timeout_ms: Override the default request timeout configuration for this method in milliseconds
@@ -211,6 +233,9 @@ class Webhooks(BaseSDK):
         url_variables = None
         if timeout_ms is None:
             timeout_ms = self.sdk_configuration.timeout_ms
+
+        if timeout_ms is None:
+            timeout_ms = 120000
 
         if server_url is not None:
             base_url = server_url
@@ -223,7 +248,8 @@ class Webhooks(BaseSDK):
             state=state,
             category=category,
             zip_code=zip_code,
-            description=description,
+            keyword=keyword,
+            contractor_name=contractor_name,
         )
 
         req = self._build_request(
@@ -263,6 +289,8 @@ class Webhooks(BaseSDK):
                 security_source=get_security_from_env(
                     self.sdk_configuration.security, models.Security
                 ),
+                tags=["Webhooks"],
+                extensions=None,
             ),
             request=req,
             is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
@@ -272,11 +300,19 @@ class Webhooks(BaseSDK):
         response_data: Any = None
         if utils.match_response(http_res, "200", "application/json"):
             return unmarshal_json_response(Any, http_res)
+        if utils.match_response(http_res, "403", "application/json"):
+            response_data = unmarshal_json_response(
+                errors.FeatureLockedErrorData, http_res
+            )
+            raise errors.FeatureLockedError(response_data, http_res)
         if utils.match_response(http_res, "422", "application/json"):
             response_data = unmarshal_json_response(
                 errors.HTTPValidationErrorData, http_res
             )
             raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
         if utils.match_response(http_res, "4XX", "*"):
             http_res_text = utils.stream_to_text(http_res)
             raise errors.PermitstackDefaultError(
@@ -298,7 +334,8 @@ class Webhooks(BaseSDK):
         state: OptionalNullable[str] = UNSET,
         category: OptionalNullable[str] = UNSET,
         zip_code: OptionalNullable[str] = UNSET,
-        description: OptionalNullable[str] = UNSET,
+        keyword: OptionalNullable[str] = UNSET,
+        contractor_name: OptionalNullable[str] = UNSET,
         retries: OptionalNullable[utils.RetryConfig] = UNSET,
         server_url: Optional[str] = None,
         timeout_ms: Optional[int] = None,
@@ -308,16 +345,19 @@ class Webhooks(BaseSDK):
 
         Register a webhook to be notified when new permits match your filters.
 
-        Available on the Developer plan and above (see /v1/billing/plans for current pricing).
-    Maximum 10 webhooks per API key.
+        Available on the Developer plan and above (see /v1/billing/plans for current
+        pricing). Maximum 10 webhooks per API key.
         When a new permit matches your filters, we'll POST the permit data as JSON to your URL.
+        Set contractor_name to track a specific company — you'll get a POST within minutes
+        of any permit they pull appearing in our data (competitor tracking).
 
         :param url:
         :param city:
         :param state:
         :param category:
         :param zip_code:
-        :param description:
+        :param keyword:
+        :param contractor_name: Fire only for permits pulled by contractors whose name contains this text (case-insensitive) — track a competitor or partner as their new permits arrive.
         :param retries: Override the default retry configuration for this method
         :param server_url: Override the default server URL for this method
         :param timeout_ms: Override the default request timeout configuration for this method in milliseconds
@@ -327,6 +367,9 @@ class Webhooks(BaseSDK):
         url_variables = None
         if timeout_ms is None:
             timeout_ms = self.sdk_configuration.timeout_ms
+
+        if timeout_ms is None:
+            timeout_ms = 120000
 
         if server_url is not None:
             base_url = server_url
@@ -339,7 +382,8 @@ class Webhooks(BaseSDK):
             state=state,
             category=category,
             zip_code=zip_code,
-            description=description,
+            keyword=keyword,
+            contractor_name=contractor_name,
         )
 
         req = self._build_request_async(
@@ -379,6 +423,8 @@ class Webhooks(BaseSDK):
                 security_source=get_security_from_env(
                     self.sdk_configuration.security, models.Security
                 ),
+                tags=["Webhooks"],
+                extensions=None,
             ),
             request=req,
             is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
@@ -388,11 +434,19 @@ class Webhooks(BaseSDK):
         response_data: Any = None
         if utils.match_response(http_res, "200", "application/json"):
             return unmarshal_json_response(Any, http_res)
+        if utils.match_response(http_res, "403", "application/json"):
+            response_data = unmarshal_json_response(
+                errors.FeatureLockedErrorData, http_res
+            )
+            raise errors.FeatureLockedError(response_data, http_res)
         if utils.match_response(http_res, "422", "application/json"):
             response_data = unmarshal_json_response(
                 errors.HTTPValidationErrorData, http_res
             )
             raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
         if utils.match_response(http_res, "4XX", "*"):
             http_res_text = await utils.stream_to_text_async(http_res)
             raise errors.PermitstackDefaultError(
@@ -430,6 +484,9 @@ class Webhooks(BaseSDK):
         if timeout_ms is None:
             timeout_ms = self.sdk_configuration.timeout_ms
 
+        if timeout_ms is None:
+            timeout_ms = 120000
+
         if server_url is not None:
             base_url = server_url
         else:
@@ -473,6 +530,8 @@ class Webhooks(BaseSDK):
                 security_source=get_security_from_env(
                     self.sdk_configuration.security, models.Security
                 ),
+                tags=["Webhooks"],
+                extensions=None,
             ),
             request=req,
             is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
@@ -487,6 +546,9 @@ class Webhooks(BaseSDK):
                 errors.HTTPValidationErrorData, http_res
             )
             raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
         if utils.match_response(http_res, "4XX", "*"):
             http_res_text = utils.stream_to_text(http_res)
             raise errors.PermitstackDefaultError(
@@ -523,6 +585,9 @@ class Webhooks(BaseSDK):
         url_variables = None
         if timeout_ms is None:
             timeout_ms = self.sdk_configuration.timeout_ms
+
+        if timeout_ms is None:
+            timeout_ms = 120000
 
         if server_url is not None:
             base_url = server_url
@@ -567,6 +632,8 @@ class Webhooks(BaseSDK):
                 security_source=get_security_from_env(
                     self.sdk_configuration.security, models.Security
                 ),
+                tags=["Webhooks"],
+                extensions=None,
             ),
             request=req,
             is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
@@ -581,6 +648,229 @@ class Webhooks(BaseSDK):
                 errors.HTTPValidationErrorData, http_res
             )
             raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
+        if utils.match_response(http_res, "4XX", "*"):
+            http_res_text = await utils.stream_to_text_async(http_res)
+            raise errors.PermitstackDefaultError(
+                "API error occurred", http_res, http_res_text
+            )
+        if utils.match_response(http_res, "5XX", "*"):
+            http_res_text = await utils.stream_to_text_async(http_res)
+            raise errors.PermitstackDefaultError(
+                "API error occurred", http_res, http_res_text
+            )
+
+        raise errors.PermitstackDefaultError("Unexpected response received", http_res)
+
+    def update_webhook(
+        self,
+        *,
+        webhook_id: str,
+        is_active: bool,
+        retries: OptionalNullable[utils.RetryConfig] = UNSET,
+        server_url: Optional[str] = None,
+        timeout_ms: Optional[int] = None,
+        http_headers: Optional[Mapping[str, str]] = None,
+    ) -> Any:
+        r"""Update Webhook
+
+        Re-activate (or deactivate) one of your webhooks.
+
+        Re-activating resumes delivery from now: permits ingested while the webhook was paused
+        are not replayed (use /v1/permits/search or /v1/permits/sync to backfill a gap), so a
+        newly fixed endpoint is not hit with the whole backlog at once. The failure count resets
+        to zero.
+
+        :param webhook_id:
+        :param is_active: true re-activates a webhook the failure breaker switched off.
+        :param retries: Override the default retry configuration for this method
+        :param server_url: Override the default server URL for this method
+        :param timeout_ms: Override the default request timeout configuration for this method in milliseconds
+        :param http_headers: Additional headers to set or replace on requests.
+        """
+        base_url = None
+        url_variables = None
+        if timeout_ms is None:
+            timeout_ms = self.sdk_configuration.timeout_ms
+
+        if timeout_ms is None:
+            timeout_ms = 120000
+
+        if server_url is not None:
+            base_url = server_url
+        else:
+            base_url = self._get_url(base_url, url_variables)
+
+        request = models.UpdateWebhookRequest(
+            webhook_id=webhook_id,
+            is_active=is_active,
+        )
+
+        req = self._build_request(
+            method="PATCH",
+            path="/v1/webhooks/{webhook_id}",
+            base_url=base_url,
+            url_variables=url_variables,
+            request=request,
+            request_body_required=False,
+            request_has_path_params=True,
+            request_has_query_params=True,
+            user_agent_header="user-agent",
+            accept_header_value="application/json",
+            http_headers=http_headers,
+            security=self.sdk_configuration.security,
+            allow_empty_value=None,
+            timeout_ms=timeout_ms,
+        )
+
+        if retries == UNSET:
+            if self.sdk_configuration.retry_config is not UNSET:
+                retries = self.sdk_configuration.retry_config
+
+        retry_config = None
+        if isinstance(retries, utils.RetryConfig):
+            retry_config = (retries, ["429", "500", "502", "503", "504"])
+
+        http_res = self.do_request(
+            hook_ctx=HookContext(
+                config=self.sdk_configuration,
+                base_url=base_url or "",
+                operation_id="update_webhook",
+                oauth2_scopes=None,
+                security_source=get_security_from_env(
+                    self.sdk_configuration.security, models.Security
+                ),
+                tags=["Webhooks"],
+                extensions=None,
+            ),
+            request=req,
+            is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
+            retry_config=retry_config,
+        )
+
+        response_data: Any = None
+        if utils.match_response(http_res, "200", "application/json"):
+            return unmarshal_json_response(Any, http_res)
+        if utils.match_response(http_res, "422", "application/json"):
+            response_data = unmarshal_json_response(
+                errors.HTTPValidationErrorData, http_res
+            )
+            raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
+        if utils.match_response(http_res, "4XX", "*"):
+            http_res_text = utils.stream_to_text(http_res)
+            raise errors.PermitstackDefaultError(
+                "API error occurred", http_res, http_res_text
+            )
+        if utils.match_response(http_res, "5XX", "*"):
+            http_res_text = utils.stream_to_text(http_res)
+            raise errors.PermitstackDefaultError(
+                "API error occurred", http_res, http_res_text
+            )
+
+        raise errors.PermitstackDefaultError("Unexpected response received", http_res)
+
+    async def update_webhook_async(
+        self,
+        *,
+        webhook_id: str,
+        is_active: bool,
+        retries: OptionalNullable[utils.RetryConfig] = UNSET,
+        server_url: Optional[str] = None,
+        timeout_ms: Optional[int] = None,
+        http_headers: Optional[Mapping[str, str]] = None,
+    ) -> Any:
+        r"""Update Webhook
+
+        Re-activate (or deactivate) one of your webhooks.
+
+        Re-activating resumes delivery from now: permits ingested while the webhook was paused
+        are not replayed (use /v1/permits/search or /v1/permits/sync to backfill a gap), so a
+        newly fixed endpoint is not hit with the whole backlog at once. The failure count resets
+        to zero.
+
+        :param webhook_id:
+        :param is_active: true re-activates a webhook the failure breaker switched off.
+        :param retries: Override the default retry configuration for this method
+        :param server_url: Override the default server URL for this method
+        :param timeout_ms: Override the default request timeout configuration for this method in milliseconds
+        :param http_headers: Additional headers to set or replace on requests.
+        """
+        base_url = None
+        url_variables = None
+        if timeout_ms is None:
+            timeout_ms = self.sdk_configuration.timeout_ms
+
+        if timeout_ms is None:
+            timeout_ms = 120000
+
+        if server_url is not None:
+            base_url = server_url
+        else:
+            base_url = self._get_url(base_url, url_variables)
+
+        request = models.UpdateWebhookRequest(
+            webhook_id=webhook_id,
+            is_active=is_active,
+        )
+
+        req = self._build_request_async(
+            method="PATCH",
+            path="/v1/webhooks/{webhook_id}",
+            base_url=base_url,
+            url_variables=url_variables,
+            request=request,
+            request_body_required=False,
+            request_has_path_params=True,
+            request_has_query_params=True,
+            user_agent_header="user-agent",
+            accept_header_value="application/json",
+            http_headers=http_headers,
+            security=self.sdk_configuration.security,
+            allow_empty_value=None,
+            timeout_ms=timeout_ms,
+        )
+
+        if retries == UNSET:
+            if self.sdk_configuration.retry_config is not UNSET:
+                retries = self.sdk_configuration.retry_config
+
+        retry_config = None
+        if isinstance(retries, utils.RetryConfig):
+            retry_config = (retries, ["429", "500", "502", "503", "504"])
+
+        http_res = await self.do_request_async(
+            hook_ctx=HookContext(
+                config=self.sdk_configuration,
+                base_url=base_url or "",
+                operation_id="update_webhook",
+                oauth2_scopes=None,
+                security_source=get_security_from_env(
+                    self.sdk_configuration.security, models.Security
+                ),
+                tags=["Webhooks"],
+                extensions=None,
+            ),
+            request=req,
+            is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
+            retry_config=retry_config,
+        )
+
+        response_data: Any = None
+        if utils.match_response(http_res, "200", "application/json"):
+            return unmarshal_json_response(Any, http_res)
+        if utils.match_response(http_res, "422", "application/json"):
+            response_data = unmarshal_json_response(
+                errors.HTTPValidationErrorData, http_res
+            )
+            raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
         if utils.match_response(http_res, "4XX", "*"):
             http_res_text = await utils.stream_to_text_async(http_res)
             raise errors.PermitstackDefaultError(
@@ -621,6 +911,9 @@ class Webhooks(BaseSDK):
         if timeout_ms is None:
             timeout_ms = self.sdk_configuration.timeout_ms
 
+        if timeout_ms is None:
+            timeout_ms = 120000
+
         if server_url is not None:
             base_url = server_url
         else:
@@ -664,6 +957,8 @@ class Webhooks(BaseSDK):
                 security_source=get_security_from_env(
                     self.sdk_configuration.security, models.Security
                 ),
+                tags=["Webhooks"],
+                extensions=None,
             ),
             request=req,
             is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
@@ -678,6 +973,9 @@ class Webhooks(BaseSDK):
                 errors.HTTPValidationErrorData, http_res
             )
             raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
         if utils.match_response(http_res, "4XX", "*"):
             http_res_text = utils.stream_to_text(http_res)
             raise errors.PermitstackDefaultError(
@@ -717,6 +1015,9 @@ class Webhooks(BaseSDK):
         url_variables = None
         if timeout_ms is None:
             timeout_ms = self.sdk_configuration.timeout_ms
+
+        if timeout_ms is None:
+            timeout_ms = 120000
 
         if server_url is not None:
             base_url = server_url
@@ -761,6 +1062,8 @@ class Webhooks(BaseSDK):
                 security_source=get_security_from_env(
                     self.sdk_configuration.security, models.Security
                 ),
+                tags=["Webhooks"],
+                extensions=None,
             ),
             request=req,
             is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
@@ -775,6 +1078,441 @@ class Webhooks(BaseSDK):
                 errors.HTTPValidationErrorData, http_res
             )
             raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
+        if utils.match_response(http_res, "4XX", "*"):
+            http_res_text = await utils.stream_to_text_async(http_res)
+            raise errors.PermitstackDefaultError(
+                "API error occurred", http_res, http_res_text
+            )
+        if utils.match_response(http_res, "5XX", "*"):
+            http_res_text = await utils.stream_to_text_async(http_res)
+            raise errors.PermitstackDefaultError(
+                "API error occurred", http_res, http_res_text
+            )
+
+        raise errors.PermitstackDefaultError("Unexpected response received", http_res)
+
+    def get_webhook_deliveries(
+        self,
+        *,
+        webhook_id: str,
+        limit: Optional[int] = 20,
+        retries: OptionalNullable[utils.RetryConfig] = UNSET,
+        server_url: Optional[str] = None,
+        timeout_ms: Optional[int] = None,
+        http_headers: Optional[Mapping[str, str]] = None,
+    ) -> Any:
+        r"""Get Webhook Deliveries
+
+        Why your webhook is or is not being delivered, seen from our side of the connection.
+
+        Only FAILED attempts are recorded individually; successful deliveries are counted
+        (fire_count, last_fired_at). An empty `recent_failures` list is therefore good news, not
+        missing data. `consecutive_failures` is what the automatic pause acts on: when it reaches
+        the limit the webhook is deactivated, so it is the field to watch.
+
+        :param webhook_id:
+        :param limit: How many recent failed attempts to return.
+        :param retries: Override the default retry configuration for this method
+        :param server_url: Override the default server URL for this method
+        :param timeout_ms: Override the default request timeout configuration for this method in milliseconds
+        :param http_headers: Additional headers to set or replace on requests.
+        """
+        base_url = None
+        url_variables = None
+        if timeout_ms is None:
+            timeout_ms = self.sdk_configuration.timeout_ms
+
+        if timeout_ms is None:
+            timeout_ms = 120000
+
+        if server_url is not None:
+            base_url = server_url
+        else:
+            base_url = self._get_url(base_url, url_variables)
+
+        request = models.GetWebhookDeliveriesRequest(
+            webhook_id=webhook_id,
+            limit=limit,
+        )
+
+        req = self._build_request(
+            method="GET",
+            path="/v1/webhooks/{webhook_id}/deliveries",
+            base_url=base_url,
+            url_variables=url_variables,
+            request=request,
+            request_body_required=False,
+            request_has_path_params=True,
+            request_has_query_params=True,
+            user_agent_header="user-agent",
+            accept_header_value="application/json",
+            http_headers=http_headers,
+            security=self.sdk_configuration.security,
+            allow_empty_value=None,
+            timeout_ms=timeout_ms,
+        )
+
+        if retries == UNSET:
+            if self.sdk_configuration.retry_config is not UNSET:
+                retries = self.sdk_configuration.retry_config
+
+        retry_config = None
+        if isinstance(retries, utils.RetryConfig):
+            retry_config = (retries, ["429", "500", "502", "503", "504"])
+
+        http_res = self.do_request(
+            hook_ctx=HookContext(
+                config=self.sdk_configuration,
+                base_url=base_url or "",
+                operation_id="get_webhook_deliveries",
+                oauth2_scopes=None,
+                security_source=get_security_from_env(
+                    self.sdk_configuration.security, models.Security
+                ),
+                tags=["Webhooks"],
+                extensions=None,
+            ),
+            request=req,
+            is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
+            retry_config=retry_config,
+        )
+
+        response_data: Any = None
+        if utils.match_response(http_res, "200", "application/json"):
+            return unmarshal_json_response(Any, http_res)
+        if utils.match_response(http_res, "422", "application/json"):
+            response_data = unmarshal_json_response(
+                errors.HTTPValidationErrorData, http_res
+            )
+            raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
+        if utils.match_response(http_res, "4XX", "*"):
+            http_res_text = utils.stream_to_text(http_res)
+            raise errors.PermitstackDefaultError(
+                "API error occurred", http_res, http_res_text
+            )
+        if utils.match_response(http_res, "5XX", "*"):
+            http_res_text = utils.stream_to_text(http_res)
+            raise errors.PermitstackDefaultError(
+                "API error occurred", http_res, http_res_text
+            )
+
+        raise errors.PermitstackDefaultError("Unexpected response received", http_res)
+
+    async def get_webhook_deliveries_async(
+        self,
+        *,
+        webhook_id: str,
+        limit: Optional[int] = 20,
+        retries: OptionalNullable[utils.RetryConfig] = UNSET,
+        server_url: Optional[str] = None,
+        timeout_ms: Optional[int] = None,
+        http_headers: Optional[Mapping[str, str]] = None,
+    ) -> Any:
+        r"""Get Webhook Deliveries
+
+        Why your webhook is or is not being delivered, seen from our side of the connection.
+
+        Only FAILED attempts are recorded individually; successful deliveries are counted
+        (fire_count, last_fired_at). An empty `recent_failures` list is therefore good news, not
+        missing data. `consecutive_failures` is what the automatic pause acts on: when it reaches
+        the limit the webhook is deactivated, so it is the field to watch.
+
+        :param webhook_id:
+        :param limit: How many recent failed attempts to return.
+        :param retries: Override the default retry configuration for this method
+        :param server_url: Override the default server URL for this method
+        :param timeout_ms: Override the default request timeout configuration for this method in milliseconds
+        :param http_headers: Additional headers to set or replace on requests.
+        """
+        base_url = None
+        url_variables = None
+        if timeout_ms is None:
+            timeout_ms = self.sdk_configuration.timeout_ms
+
+        if timeout_ms is None:
+            timeout_ms = 120000
+
+        if server_url is not None:
+            base_url = server_url
+        else:
+            base_url = self._get_url(base_url, url_variables)
+
+        request = models.GetWebhookDeliveriesRequest(
+            webhook_id=webhook_id,
+            limit=limit,
+        )
+
+        req = self._build_request_async(
+            method="GET",
+            path="/v1/webhooks/{webhook_id}/deliveries",
+            base_url=base_url,
+            url_variables=url_variables,
+            request=request,
+            request_body_required=False,
+            request_has_path_params=True,
+            request_has_query_params=True,
+            user_agent_header="user-agent",
+            accept_header_value="application/json",
+            http_headers=http_headers,
+            security=self.sdk_configuration.security,
+            allow_empty_value=None,
+            timeout_ms=timeout_ms,
+        )
+
+        if retries == UNSET:
+            if self.sdk_configuration.retry_config is not UNSET:
+                retries = self.sdk_configuration.retry_config
+
+        retry_config = None
+        if isinstance(retries, utils.RetryConfig):
+            retry_config = (retries, ["429", "500", "502", "503", "504"])
+
+        http_res = await self.do_request_async(
+            hook_ctx=HookContext(
+                config=self.sdk_configuration,
+                base_url=base_url or "",
+                operation_id="get_webhook_deliveries",
+                oauth2_scopes=None,
+                security_source=get_security_from_env(
+                    self.sdk_configuration.security, models.Security
+                ),
+                tags=["Webhooks"],
+                extensions=None,
+            ),
+            request=req,
+            is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
+            retry_config=retry_config,
+        )
+
+        response_data: Any = None
+        if utils.match_response(http_res, "200", "application/json"):
+            return unmarshal_json_response(Any, http_res)
+        if utils.match_response(http_res, "422", "application/json"):
+            response_data = unmarshal_json_response(
+                errors.HTTPValidationErrorData, http_res
+            )
+            raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
+        if utils.match_response(http_res, "4XX", "*"):
+            http_res_text = await utils.stream_to_text_async(http_res)
+            raise errors.PermitstackDefaultError(
+                "API error occurred", http_res, http_res_text
+            )
+        if utils.match_response(http_res, "5XX", "*"):
+            http_res_text = await utils.stream_to_text_async(http_res)
+            raise errors.PermitstackDefaultError(
+                "API error occurred", http_res, http_res_text
+            )
+
+        raise errors.PermitstackDefaultError("Unexpected response received", http_res)
+
+    def rotate_webhook_secret(
+        self,
+        *,
+        webhook_id: str,
+        retries: OptionalNullable[utils.RetryConfig] = UNSET,
+        server_url: Optional[str] = None,
+        timeout_ms: Optional[int] = None,
+        http_headers: Optional[Mapping[str, str]] = None,
+    ) -> Any:
+        r"""Rotate Webhook Secret
+
+        Issue a NEW signing secret for this webhook. The old one stops working immediately.
+
+        Every delivery after this call is signed with the new secret, so update your verifier
+        first. Creating a webhook again with the same settings returns the existing secret; this
+        endpoint is the only way to rotate it.
+
+        :param webhook_id:
+        :param retries: Override the default retry configuration for this method
+        :param server_url: Override the default server URL for this method
+        :param timeout_ms: Override the default request timeout configuration for this method in milliseconds
+        :param http_headers: Additional headers to set or replace on requests.
+        """
+        base_url = None
+        url_variables = None
+        if timeout_ms is None:
+            timeout_ms = self.sdk_configuration.timeout_ms
+
+        if timeout_ms is None:
+            timeout_ms = 120000
+
+        if server_url is not None:
+            base_url = server_url
+        else:
+            base_url = self._get_url(base_url, url_variables)
+
+        request = models.RotateWebhookSecretRequest(
+            webhook_id=webhook_id,
+        )
+
+        req = self._build_request(
+            method="POST",
+            path="/v1/webhooks/{webhook_id}/rotate-secret",
+            base_url=base_url,
+            url_variables=url_variables,
+            request=request,
+            request_body_required=False,
+            request_has_path_params=True,
+            request_has_query_params=True,
+            user_agent_header="user-agent",
+            accept_header_value="application/json",
+            http_headers=http_headers,
+            security=self.sdk_configuration.security,
+            allow_empty_value=None,
+            timeout_ms=timeout_ms,
+        )
+
+        if retries == UNSET:
+            if self.sdk_configuration.retry_config is not UNSET:
+                retries = self.sdk_configuration.retry_config
+
+        retry_config = None
+        if isinstance(retries, utils.RetryConfig):
+            retry_config = (retries, ["429", "500", "502", "503", "504"])
+
+        http_res = self.do_request(
+            hook_ctx=HookContext(
+                config=self.sdk_configuration,
+                base_url=base_url or "",
+                operation_id="rotate_webhook_secret",
+                oauth2_scopes=None,
+                security_source=get_security_from_env(
+                    self.sdk_configuration.security, models.Security
+                ),
+                tags=["Webhooks"],
+                extensions=None,
+            ),
+            request=req,
+            is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
+            retry_config=retry_config,
+        )
+
+        response_data: Any = None
+        if utils.match_response(http_res, "200", "application/json"):
+            return unmarshal_json_response(Any, http_res)
+        if utils.match_response(http_res, "422", "application/json"):
+            response_data = unmarshal_json_response(
+                errors.HTTPValidationErrorData, http_res
+            )
+            raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
+        if utils.match_response(http_res, "4XX", "*"):
+            http_res_text = utils.stream_to_text(http_res)
+            raise errors.PermitstackDefaultError(
+                "API error occurred", http_res, http_res_text
+            )
+        if utils.match_response(http_res, "5XX", "*"):
+            http_res_text = utils.stream_to_text(http_res)
+            raise errors.PermitstackDefaultError(
+                "API error occurred", http_res, http_res_text
+            )
+
+        raise errors.PermitstackDefaultError("Unexpected response received", http_res)
+
+    async def rotate_webhook_secret_async(
+        self,
+        *,
+        webhook_id: str,
+        retries: OptionalNullable[utils.RetryConfig] = UNSET,
+        server_url: Optional[str] = None,
+        timeout_ms: Optional[int] = None,
+        http_headers: Optional[Mapping[str, str]] = None,
+    ) -> Any:
+        r"""Rotate Webhook Secret
+
+        Issue a NEW signing secret for this webhook. The old one stops working immediately.
+
+        Every delivery after this call is signed with the new secret, so update your verifier
+        first. Creating a webhook again with the same settings returns the existing secret; this
+        endpoint is the only way to rotate it.
+
+        :param webhook_id:
+        :param retries: Override the default retry configuration for this method
+        :param server_url: Override the default server URL for this method
+        :param timeout_ms: Override the default request timeout configuration for this method in milliseconds
+        :param http_headers: Additional headers to set or replace on requests.
+        """
+        base_url = None
+        url_variables = None
+        if timeout_ms is None:
+            timeout_ms = self.sdk_configuration.timeout_ms
+
+        if timeout_ms is None:
+            timeout_ms = 120000
+
+        if server_url is not None:
+            base_url = server_url
+        else:
+            base_url = self._get_url(base_url, url_variables)
+
+        request = models.RotateWebhookSecretRequest(
+            webhook_id=webhook_id,
+        )
+
+        req = self._build_request_async(
+            method="POST",
+            path="/v1/webhooks/{webhook_id}/rotate-secret",
+            base_url=base_url,
+            url_variables=url_variables,
+            request=request,
+            request_body_required=False,
+            request_has_path_params=True,
+            request_has_query_params=True,
+            user_agent_header="user-agent",
+            accept_header_value="application/json",
+            http_headers=http_headers,
+            security=self.sdk_configuration.security,
+            allow_empty_value=None,
+            timeout_ms=timeout_ms,
+        )
+
+        if retries == UNSET:
+            if self.sdk_configuration.retry_config is not UNSET:
+                retries = self.sdk_configuration.retry_config
+
+        retry_config = None
+        if isinstance(retries, utils.RetryConfig):
+            retry_config = (retries, ["429", "500", "502", "503", "504"])
+
+        http_res = await self.do_request_async(
+            hook_ctx=HookContext(
+                config=self.sdk_configuration,
+                base_url=base_url or "",
+                operation_id="rotate_webhook_secret",
+                oauth2_scopes=None,
+                security_source=get_security_from_env(
+                    self.sdk_configuration.security, models.Security
+                ),
+                tags=["Webhooks"],
+                extensions=None,
+            ),
+            request=req,
+            is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
+            retry_config=retry_config,
+        )
+
+        response_data: Any = None
+        if utils.match_response(http_res, "200", "application/json"):
+            return unmarshal_json_response(Any, http_res)
+        if utils.match_response(http_res, "422", "application/json"):
+            response_data = unmarshal_json_response(
+                errors.HTTPValidationErrorData, http_res
+            )
+            raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
         if utils.match_response(http_res, "4XX", "*"):
             http_res_text = await utils.stream_to_text_async(http_res)
             raise errors.PermitstackDefaultError(
@@ -816,6 +1554,9 @@ class Webhooks(BaseSDK):
         if timeout_ms is None:
             timeout_ms = self.sdk_configuration.timeout_ms
 
+        if timeout_ms is None:
+            timeout_ms = 120000
+
         if server_url is not None:
             base_url = server_url
         else:
@@ -859,6 +1600,8 @@ class Webhooks(BaseSDK):
                 security_source=get_security_from_env(
                     self.sdk_configuration.security, models.Security
                 ),
+                tags=["Webhooks"],
+                extensions=None,
             ),
             request=req,
             is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
@@ -873,6 +1616,9 @@ class Webhooks(BaseSDK):
                 errors.HTTPValidationErrorData, http_res
             )
             raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
         if utils.match_response(http_res, "4XX", "*"):
             http_res_text = utils.stream_to_text(http_res)
             raise errors.PermitstackDefaultError(
@@ -913,6 +1659,9 @@ class Webhooks(BaseSDK):
         url_variables = None
         if timeout_ms is None:
             timeout_ms = self.sdk_configuration.timeout_ms
+
+        if timeout_ms is None:
+            timeout_ms = 120000
 
         if server_url is not None:
             base_url = server_url
@@ -957,6 +1706,8 @@ class Webhooks(BaseSDK):
                 security_source=get_security_from_env(
                     self.sdk_configuration.security, models.Security
                 ),
+                tags=["Webhooks"],
+                extensions=None,
             ),
             request=req,
             is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
@@ -971,6 +1722,9 @@ class Webhooks(BaseSDK):
                 errors.HTTPValidationErrorData, http_res
             )
             raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
         if utils.match_response(http_res, "4XX", "*"):
             http_res_text = await utils.stream_to_text_async(http_res)
             raise errors.PermitstackDefaultError(

@@ -10,6 +10,7 @@ from permitstack.types import (
     UNSET_SENTINEL,
 )
 from permitstack.utils import FieldMetadata, QueryParamMetadata
+import pydantic
 from pydantic import model_serializer
 from typing import Optional
 from typing_extensions import Annotated, NotRequired, TypedDict
@@ -17,7 +18,7 @@ from typing_extensions import Annotated, NotRequired, TypedDict
 
 class ListPermitEventsRequestTypedDict(TypedDict):
     event_type: NotRequired[Nullable[str]]
-    r"""Filter by event type: new_permit, status_change, issued, completed, expired"""
+    r"""Filter by event type: new_permit, status_change, issued, completed, expired (the permit's expiration date has passed without it being finished; emitted when that date arrives)"""
     category: NotRequired[Nullable[str]]
     r"""Permit category (e.g. solar, battery)"""
     city: NotRequired[Nullable[str]]
@@ -29,9 +30,13 @@ class ListPermitEventsRequestTypedDict(TypedDict):
     permit_id: NotRequired[Nullable[str]]
     r"""Events for a single permit id"""
     detected_after: NotRequired[Nullable[datetime]]
-    r"""Only events detected on/after this UTC timestamp (ISO 8601)"""
+    r"""Only events detected on/after this UTC timestamp (ISO 8601). Inclusive, so a batch sharing one timestamp is re-delivered; prefer `cursor` for polling."""
+    cursor: NotRequired[Nullable[str]]
+    r"""Opaque cursor from the previous response's `next_cursor`. Resumes exactly where you stopped, with no duplicates and no gap. Omit on the first call."""
     page: NotRequired[int]
     per_page: NotRequired[int]
+    limit: NotRequired[Nullable[int]]
+    r"""Alias of `per_page`. Clamped to 100, not rejected."""
 
 
 class ListPermitEventsRequest(BaseModel):
@@ -39,7 +44,7 @@ class ListPermitEventsRequest(BaseModel):
         OptionalNullable[str],
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
     ] = UNSET
-    r"""Filter by event type: new_permit, status_change, issued, completed, expired"""
+    r"""Filter by event type: new_permit, status_change, issued, completed, expired (the permit's expiration date has passed without it being finished; emitted when that date arrives)"""
 
     category: Annotated[
         OptionalNullable[str],
@@ -75,7 +80,13 @@ class ListPermitEventsRequest(BaseModel):
         OptionalNullable[datetime],
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
     ] = UNSET
-    r"""Only events detected on/after this UTC timestamp (ISO 8601)"""
+    r"""Only events detected on/after this UTC timestamp (ISO 8601). Inclusive, so a batch sharing one timestamp is re-delivered; prefer `cursor` for polling."""
+
+    cursor: Annotated[
+        OptionalNullable[str],
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+    r"""Opaque cursor from the previous response's `next_cursor`. Resumes exactly where you stopped, with no duplicates and no gap. Omit on the first call."""
 
     page: Annotated[
         Optional[int],
@@ -86,6 +97,15 @@ class ListPermitEventsRequest(BaseModel):
         Optional[int],
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
     ] = 50
+
+    limit: Annotated[
+        OptionalNullable[int],
+        pydantic.Field(
+            deprecated="warning: ** DEPRECATED ** - This will be removed in a future release, please migrate away from it as soon as possible."
+        ),
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+    r"""Alias of `per_page`. Clamped to 100, not rejected."""
 
     @model_serializer(mode="wrap")
     def serialize_model(self, handler):
@@ -98,8 +118,10 @@ class ListPermitEventsRequest(BaseModel):
                 "jurisdiction",
                 "permit_id",
                 "detected_after",
+                "cursor",
                 "page",
                 "per_page",
+                "limit",
             ]
         )
         nullable_fields = set(
@@ -111,6 +133,8 @@ class ListPermitEventsRequest(BaseModel):
                 "jurisdiction",
                 "permit_id",
                 "detected_after",
+                "cursor",
+                "limit",
             ]
         )
         serialized = handler(self)

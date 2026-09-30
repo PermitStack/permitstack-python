@@ -15,5 +15,9 @@ underwriting) workflow can tell UNKNOWN apart from genuinely-no-work.
 | `covered`                   | *bool*                      | :heavy_check_mark:          | N/A                         |
 | `jurisdiction`              | *OptionalNullable[str]*     | :heavy_minus_sign:          | N/A                         |
 | `data_status`               | *OptionalNullable[str]*     | :heavy_minus_sign:          | N/A                         |
+| `data_through`              | *OptionalNullable[str]*     | :heavy_minus_sign:          | N/A                         |
+| `freshness`                 | *OptionalNullable[str]*     | :heavy_minus_sign:          | N/A                         |
 | `jurisdiction_permit_count` | *OptionalNullable[int]*     | :heavy_minus_sign:          | N/A                         |
 | `note`                      | *str*                       | :heavy_check_mark:          | N/A                         |
+| `tier_window_days`          | *OptionalNullable[int]*     | :heavy_minus_sign:          | N/A                         |
+| `tier_window_from`          | *OptionalNullable[str]*     | :heavy_minus_sign:          | N/A                         |

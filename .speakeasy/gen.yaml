@@ -34,7 +34,7 @@ generation:
     generateNewTests: true
     skipResponseBodyAssertions: false
 python:
-  version: 1.1.9
+  version: 1.2.0
   additionalDependencies:
     dev: {}
     main: {}
@@ -52,6 +52,7 @@ python:
   constFieldCasing: normal
   defaultErrorName: PermitstackDefaultError
   description: Official Python SDK for the PermitStack building permit data API.
+  durationFormat: false
   enableCustomCodeRegions: false
   enumFormat: union
   envVarPrefix: PERMITSTACK
@@ -68,6 +69,7 @@ python:
   flatteningOrder: parameters-first
   forwardCompatibleEnumsByDefault: true
   forwardCompatibleUnionsByDefault: tagged-only
+  httpClientLibrary: httpx
   imports:
     option: openapi
     paths:
@@ -99,3 +101,4 @@ python:
   sseFlatResponse: false
   templateVersion: v2
   useAsyncHooks: false
+  uuidFormat: false

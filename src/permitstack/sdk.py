@@ -17,6 +17,7 @@ import weakref
 if TYPE_CHECKING:
     from permitstack.contractors import Contractors
     from permitstack.health import Health
+    from permitstack.metrics import Metrics
     from permitstack.permits import Permits
     from permitstack.property_history import PropertyHistory
     from permitstack.webhooks import Webhooks
@@ -26,7 +27,7 @@ class Permitstack(BaseSDK):
     r"""PermitStack:
     ## PermitStack Building Permit API
 
-    Access 108M+ building permits across 10,000+ U.S. cities in 48 states and DC (798 active data sources, plus 75 historical archives), updated daily from official open data portals.
+    Access 110M+ building permits across 8,000+ U.S. cities in 48 states and DC (810 active data sources including counties and statewide feeds, plus 75 historical archives), drawn from official city and county permit systems and open-data portals and re-ingested nightly for most sources.
 
     ### Getting started
     1. Sign up at [permit-stack.com](https://permit-stack.com/#pricing) for a free API key (100 req/day)
@@ -41,7 +42,10 @@ class Permitstack(BaseSDK):
     Hobbyist   | 30           | 2,500
     Developer  | 60           | 10,000
     Business   | 200          | 100,000
-    Enterprise | custom       | custom
+    Scale      | 500          | 500,000
+
+    Free keys cover the last 30 days of permits; every paid tier has full historical access.
+    Higher volume or custom terms: support@permit-stack.com
 
     ### Support
     support@permit-stack.com
@@ -57,13 +61,16 @@ class Permitstack(BaseSDK):
     property_history: "PropertyHistory"
     r"""Get permit history for a specific address"""
     webhooks: "Webhooks"
-    r"""Subscribe to real-time permit events (paid tiers)"""
+    r"""New and changed permits pushed to your endpoint about 60 seconds after we ingest them; most sources are ingested nightly. Developer plan ($79/mo) and above."""
+    metrics: "Metrics"
+    r"""Pre-aggregated permit counts and valuation from a nightly rollup. Use these instead of paging through search results to count them: they answer 'how many' and 'is it trending' in one millisecond-scale call. Developer plan and above."""
     _sub_sdk_map = {
         "health": ("permitstack.health", "Health"),
         "permits": ("permitstack.permits", "Permits"),
         "contractors": ("permitstack.contractors", "Contractors"),
         "property_history": ("permitstack.property_history", "PropertyHistory"),
         "webhooks": ("permitstack.webhooks", "Webhooks"),
+        "metrics": ("permitstack.metrics", "Metrics"),
     }
 
     def __init__(

@@ -19,6 +19,8 @@ class Contractors(BaseSDK):
         state: OptionalNullable[str] = UNSET,
         city: OptionalNullable[str] = UNSET,
         specialty: OptionalNullable[str] = UNSET,
+        license_number: OptionalNullable[str] = UNSET,
+        license_state: OptionalNullable[str] = UNSET,
         min_permits: OptionalNullable[int] = UNSET,
         min_score: OptionalNullable[int] = UNSET,
         sort: Optional[str] = "score",
@@ -37,6 +39,8 @@ class Contractors(BaseSDK):
         :param state: 2-letter state code
         :param city: City name
         :param specialty: Specialty tag (e.g. solar, roofing, hvac)
+        :param license_number: Exact state licence number, e.g. 'CBC1262595'. Matched exactly, and also tried uppercased -- so any capitalisation works for the licences stored uppercase, which is 99.96% of them. Combine with license_state when the same number is issued in more than one state.
+        :param license_state: 2-letter state that ISSUED the licence. Not the same as `state`, which is where the contractor pulls permits.
         :param min_permits: Minimum total permits
         :param min_score: Minimum contractor activity score (0-100)
         :param sort: Sort order: 'score' (default), 'permits', or 'recent'
@@ -52,6 +56,9 @@ class Contractors(BaseSDK):
         if timeout_ms is None:
             timeout_ms = self.sdk_configuration.timeout_ms
 
+        if timeout_ms is None:
+            timeout_ms = 120000
+
         if server_url is not None:
             base_url = server_url
         else:
@@ -62,6 +69,8 @@ class Contractors(BaseSDK):
             state=state,
             city=city,
             specialty=specialty,
+            license_number=license_number,
+            license_state=license_state,
             min_permits=min_permits,
             min_score=min_score,
             sort=sort,
@@ -103,6 +112,8 @@ class Contractors(BaseSDK):
                 security_source=get_security_from_env(
                     self.sdk_configuration.security, models.Security
                 ),
+                tags=["Contractors"],
+                extensions=None,
             ),
             request=req,
             is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
@@ -117,6 +128,9 @@ class Contractors(BaseSDK):
                 errors.HTTPValidationErrorData, http_res
             )
             raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
         if utils.match_response(http_res, "4XX", "*"):
             http_res_text = utils.stream_to_text(http_res)
             raise errors.PermitstackDefaultError(
@@ -137,6 +151,8 @@ class Contractors(BaseSDK):
         state: OptionalNullable[str] = UNSET,
         city: OptionalNullable[str] = UNSET,
         specialty: OptionalNullable[str] = UNSET,
+        license_number: OptionalNullable[str] = UNSET,
+        license_state: OptionalNullable[str] = UNSET,
         min_permits: OptionalNullable[int] = UNSET,
         min_score: OptionalNullable[int] = UNSET,
         sort: Optional[str] = "score",
@@ -155,6 +171,8 @@ class Contractors(BaseSDK):
         :param state: 2-letter state code
         :param city: City name
         :param specialty: Specialty tag (e.g. solar, roofing, hvac)
+        :param license_number: Exact state licence number, e.g. 'CBC1262595'. Matched exactly, and also tried uppercased -- so any capitalisation works for the licences stored uppercase, which is 99.96% of them. Combine with license_state when the same number is issued in more than one state.
+        :param license_state: 2-letter state that ISSUED the licence. Not the same as `state`, which is where the contractor pulls permits.
         :param min_permits: Minimum total permits
         :param min_score: Minimum contractor activity score (0-100)
         :param sort: Sort order: 'score' (default), 'permits', or 'recent'
@@ -170,6 +188,9 @@ class Contractors(BaseSDK):
         if timeout_ms is None:
             timeout_ms = self.sdk_configuration.timeout_ms
 
+        if timeout_ms is None:
+            timeout_ms = 120000
+
         if server_url is not None:
             base_url = server_url
         else:
@@ -180,6 +201,8 @@ class Contractors(BaseSDK):
             state=state,
             city=city,
             specialty=specialty,
+            license_number=license_number,
+            license_state=license_state,
             min_permits=min_permits,
             min_score=min_score,
             sort=sort,
@@ -221,6 +244,8 @@ class Contractors(BaseSDK):
                 security_source=get_security_from_env(
                     self.sdk_configuration.security, models.Security
                 ),
+                tags=["Contractors"],
+                extensions=None,
             ),
             request=req,
             is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
@@ -235,6 +260,9 @@ class Contractors(BaseSDK):
                 errors.HTTPValidationErrorData, http_res
             )
             raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
         if utils.match_response(http_res, "4XX", "*"):
             http_res_text = await utils.stream_to_text_async(http_res)
             raise errors.PermitstackDefaultError(
@@ -261,6 +289,11 @@ class Contractors(BaseSDK):
 
         Get a contractor's full profile with permit stats.
 
+        `phone` and `email` are contractor contact fields gated to the Developer plan and up
+        (see /v1/billing/plans for current pricing); on free/indie/hobbyist they return null.
+        `name`, `license_number`, `specialties`, `city`/`state`/`address`, and the stats are
+        available on all plans.
+
         :param contractor_id:
         :param retries: Override the default retry configuration for this method
         :param server_url: Override the default server URL for this method
@@ -271,6 +304,9 @@ class Contractors(BaseSDK):
         url_variables = None
         if timeout_ms is None:
             timeout_ms = self.sdk_configuration.timeout_ms
+
+        if timeout_ms is None:
+            timeout_ms = 120000
 
         if server_url is not None:
             base_url = server_url
@@ -315,6 +351,8 @@ class Contractors(BaseSDK):
                 security_source=get_security_from_env(
                     self.sdk_configuration.security, models.Security
                 ),
+                tags=["Contractors"],
+                extensions=None,
             ),
             request=req,
             is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
@@ -329,6 +367,9 @@ class Contractors(BaseSDK):
                 errors.HTTPValidationErrorData, http_res
             )
             raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
         if utils.match_response(http_res, "4XX", "*"):
             http_res_text = utils.stream_to_text(http_res)
             raise errors.PermitstackDefaultError(
@@ -355,6 +396,11 @@ class Contractors(BaseSDK):
 
         Get a contractor's full profile with permit stats.
 
+        `phone` and `email` are contractor contact fields gated to the Developer plan and up
+        (see /v1/billing/plans for current pricing); on free/indie/hobbyist they return null.
+        `name`, `license_number`, `specialties`, `city`/`state`/`address`, and the stats are
+        available on all plans.
+
         :param contractor_id:
         :param retries: Override the default retry configuration for this method
         :param server_url: Override the default server URL for this method
@@ -365,6 +411,9 @@ class Contractors(BaseSDK):
         url_variables = None
         if timeout_ms is None:
             timeout_ms = self.sdk_configuration.timeout_ms
+
+        if timeout_ms is None:
+            timeout_ms = 120000
 
         if server_url is not None:
             base_url = server_url
@@ -409,6 +458,8 @@ class Contractors(BaseSDK):
                 security_source=get_security_from_env(
                     self.sdk_configuration.security, models.Security
                 ),
+                tags=["Contractors"],
+                extensions=None,
             ),
             request=req,
             is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
@@ -423,6 +474,9 @@ class Contractors(BaseSDK):
                 errors.HTTPValidationErrorData, http_res
             )
             raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
         if utils.match_response(http_res, "4XX", "*"):
             http_res_text = await utils.stream_to_text_async(http_res)
             raise errors.PermitstackDefaultError(
@@ -464,6 +518,9 @@ class Contractors(BaseSDK):
         if timeout_ms is None:
             timeout_ms = self.sdk_configuration.timeout_ms
 
+        if timeout_ms is None:
+            timeout_ms = 120000
+
         if server_url is not None:
             base_url = server_url
         else:
@@ -509,6 +566,8 @@ class Contractors(BaseSDK):
                 security_source=get_security_from_env(
                     self.sdk_configuration.security, models.Security
                 ),
+                tags=["Contractors"],
+                extensions=None,
             ),
             request=req,
             is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
@@ -523,6 +582,9 @@ class Contractors(BaseSDK):
                 errors.HTTPValidationErrorData, http_res
             )
             raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
         if utils.match_response(http_res, "4XX", "*"):
             http_res_text = utils.stream_to_text(http_res)
             raise errors.PermitstackDefaultError(
@@ -563,6 +625,9 @@ class Contractors(BaseSDK):
         url_variables = None
         if timeout_ms is None:
             timeout_ms = self.sdk_configuration.timeout_ms
+
+        if timeout_ms is None:
+            timeout_ms = 120000
 
         if server_url is not None:
             base_url = server_url
@@ -609,6 +674,8 @@ class Contractors(BaseSDK):
                 security_source=get_security_from_env(
                     self.sdk_configuration.security, models.Security
                 ),
+                tags=["Contractors"],
+                extensions=None,
             ),
             request=req,
             is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
@@ -623,6 +690,9 @@ class Contractors(BaseSDK):
                 errors.HTTPValidationErrorData, http_res
             )
             raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
         if utils.match_response(http_res, "4XX", "*"):
             http_res_text = await utils.stream_to_text_async(http_res)
             raise errors.PermitstackDefaultError(

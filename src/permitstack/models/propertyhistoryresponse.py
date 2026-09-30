@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 from .coverageconfidence import CoverageConfidence, CoverageConfidenceTypedDict
+from .jurisdictioncoverage import JurisdictionCoverage, JurisdictionCoverageTypedDict
 from .permitsummary import PermitSummary, PermitSummaryTypedDict
 from .propertyquery import PropertyQuery, PropertyQueryTypedDict
 from .propertysummary import PropertySummary, PropertySummaryTypedDict
@@ -27,7 +28,11 @@ class PropertyHistoryResponseTypedDict(TypedDict):
     per_page: int
     has_more: bool
     permits: List[PermitSummaryTypedDict]
+    distinct_addresses: NotRequired[Nullable[int]]
+    distinct_jurisdictions: NotRequired[Nullable[int]]
+    fan_out_warning: NotRequired[Nullable[str]]
     coverage: NotRequired[Nullable[CoverageConfidenceTypedDict]]
+    data_currency: NotRequired[Nullable[List[JurisdictionCoverageTypedDict]]]
 
 
 class PropertyHistoryResponse(BaseModel):
@@ -49,12 +54,36 @@ class PropertyHistoryResponse(BaseModel):
 
     permits: List[PermitSummary]
 
+    distinct_addresses: OptionalNullable[int] = UNSET
+
+    distinct_jurisdictions: OptionalNullable[int] = UNSET
+
+    fan_out_warning: OptionalNullable[str] = UNSET
+
     coverage: OptionalNullable[CoverageConfidence] = UNSET
+
+    data_currency: OptionalNullable[List[JurisdictionCoverage]] = UNSET
 
     @model_serializer(mode="wrap")
     def serialize_model(self, handler):
-        optional_fields = set(["coverage"])
-        nullable_fields = set(["coverage"])
+        optional_fields = set(
+            [
+                "distinct_addresses",
+                "distinct_jurisdictions",
+                "fan_out_warning",
+                "coverage",
+                "data_currency",
+            ]
+        )
+        nullable_fields = set(
+            [
+                "distinct_addresses",
+                "distinct_jurisdictions",
+                "fan_out_warning",
+                "coverage",
+                "data_currency",
+            ]
+        )
         serialized = handler(self)
         m = {}
 

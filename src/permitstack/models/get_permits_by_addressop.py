@@ -12,6 +12,8 @@ class GetPermitsByAddressRequestTypedDict(TypedDict):
     address: str
     page: NotRequired[int]
     per_page: NotRequired[int]
+    record_kind: NotRequired[str]
+    r"""'permit' (default), a specific record_kind, or 'all'."""
 
 
 class GetPermitsByAddressRequest(BaseModel):
@@ -29,9 +31,15 @@ class GetPermitsByAddressRequest(BaseModel):
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
     ] = 25
 
+    record_kind: Annotated[
+        Optional[str],
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = "permit"
+    r"""'permit' (default), a specific record_kind, or 'all'."""
+
     @model_serializer(mode="wrap")
     def serialize_model(self, handler):
-        optional_fields = set(["page", "per_page"])
+        optional_fields = set(["page", "per_page", "record_kind"])
         serialized = handler(self)
         m = {}
 

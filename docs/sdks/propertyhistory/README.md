@@ -52,6 +52,7 @@ with Permitstack(
 | `zip`                                                               | *OptionalNullable[str]*                                             | :heavy_minus_sign:                                                  | Optional ZIP (prefix-matched)                                       |
 | `page`                                                              | *Optional[int]*                                                     | :heavy_minus_sign:                                                  | N/A                                                                 |
 | `per_page`                                                          | *Optional[int]*                                                     | :heavy_minus_sign:                                                  | N/A                                                                 |
+| `limit`                                                             | *OptionalNullable[int]*                                             | :heavy_minus_sign:                                                  | Alias of per_page.                                                  |
 | `retries`                                                           | [Optional[utils.RetryConfig]](../../models/utils/retryconfig.md)    | :heavy_minus_sign:                                                  | Configuration to override the default retry behavior of the client. |
 
 ### Response
@@ -63,6 +64,7 @@ with Permitstack(
 | Error Type                     | Status Code                    | Content Type                   |
 | ------------------------------ | ------------------------------ | ------------------------------ |
 | errors.HTTPValidationError     | 422                            | application/json               |
+| errors.ErrorDetail             | 401, 429                       | application/json               |
 | errors.PermitstackDefaultError | 4XX, 5XX                       | \*/\*                          |
 
 ## get_property_by_parcel
@@ -108,6 +110,7 @@ with Permitstack(
 | `state`                                                                                                    | *OptionalNullable[str]*                                                                                    | :heavy_minus_sign:                                                                                         | Optional 2-letter state to disambiguate the same parcel number across counties                             |
 | `page`                                                                                                     | *Optional[int]*                                                                                            | :heavy_minus_sign:                                                                                         | N/A                                                                                                        |
 | `per_page`                                                                                                 | *Optional[int]*                                                                                            | :heavy_minus_sign:                                                                                         | N/A                                                                                                        |
+| `limit`                                                                                                    | *OptionalNullable[int]*                                                                                    | :heavy_minus_sign:                                                                                         | Alias of per_page.                                                                                         |
 | `retries`                                                                                                  | [Optional[utils.RetryConfig]](../../models/utils/retryconfig.md)                                           | :heavy_minus_sign:                                                                                         | Configuration to override the default retry behavior of the client.                                        |
 
 ### Response
@@ -119,4 +122,5 @@ with Permitstack(
 | Error Type                     | Status Code                    | Content Type                   |
 | ------------------------------ | ------------------------------ | ------------------------------ |
 | errors.HTTPValidationError     | 422                            | application/json               |
+| errors.ErrorDetail             | 401, 429                       | application/json               |
 | errors.PermitstackDefaultError | 4XX, 5XX                       | \*/\*                          |

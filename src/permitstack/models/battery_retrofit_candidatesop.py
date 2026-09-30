@@ -59,13 +59,13 @@ class BatteryRetrofitCandidatesRequest(BaseModel):
     min_age_years: Annotated[
         Optional[float],
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
-    ] = 2
+    ] = 2.0
     r"""Minimum age of the PV permit, in years"""
 
     max_age_years: Annotated[
         Optional[float],
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
-    ] = 7
+    ] = 7.0
     r"""Maximum age of the PV permit, in years"""
 
     page: Annotated[

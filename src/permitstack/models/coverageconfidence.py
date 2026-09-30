@@ -25,7 +25,11 @@ class CoverageConfidenceTypedDict(TypedDict):
     note: str
     jurisdiction: NotRequired[Nullable[str]]
     data_status: NotRequired[Nullable[str]]
+    data_through: NotRequired[Nullable[str]]
+    freshness: NotRequired[Nullable[str]]
     jurisdiction_permit_count: NotRequired[Nullable[int]]
+    tier_window_days: NotRequired[Nullable[int]]
+    tier_window_from: NotRequired[Nullable[str]]
 
 
 class CoverageConfidence(BaseModel):
@@ -46,15 +50,39 @@ class CoverageConfidence(BaseModel):
 
     data_status: OptionalNullable[str] = UNSET
 
+    data_through: OptionalNullable[str] = UNSET
+
+    freshness: OptionalNullable[str] = UNSET
+
     jurisdiction_permit_count: OptionalNullable[int] = UNSET
+
+    tier_window_days: OptionalNullable[int] = UNSET
+
+    tier_window_from: OptionalNullable[str] = UNSET
 
     @model_serializer(mode="wrap")
     def serialize_model(self, handler):
         optional_fields = set(
-            ["jurisdiction", "data_status", "jurisdiction_permit_count"]
+            [
+                "jurisdiction",
+                "data_status",
+                "data_through",
+                "freshness",
+                "jurisdiction_permit_count",
+                "tier_window_days",
+                "tier_window_from",
+            ]
         )
         nullable_fields = set(
-            ["jurisdiction", "data_status", "jurisdiction_permit_count"]
+            [
+                "jurisdiction",
+                "data_status",
+                "data_through",
+                "freshness",
+                "jurisdiction_permit_count",
+                "tier_window_days",
+                "tier_window_from",
+            ]
         )
         serialized = handler(self)
         m = {}

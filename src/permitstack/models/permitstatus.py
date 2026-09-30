@@ -13,4 +13,5 @@ PermitStatus = Literal[
     "cancelled",
     "revoked",
     "unknown",
+    "interconnected",
 ]

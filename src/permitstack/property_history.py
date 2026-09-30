@@ -21,6 +21,7 @@ class PropertyHistory(BaseSDK):
         zip: OptionalNullable[str] = UNSET,
         page: Optional[int] = 1,
         per_page: Optional[int] = 50,
+        limit: OptionalNullable[int] = UNSET,
         retries: OptionalNullable[utils.RetryConfig] = UNSET,
         server_url: Optional[str] = None,
         timeout_ms: Optional[int] = None,
@@ -46,6 +47,7 @@ class PropertyHistory(BaseSDK):
         :param zip: Optional ZIP (prefix-matched)
         :param page:
         :param per_page:
+        :param limit: Alias of per_page.
         :param retries: Override the default retry configuration for this method
         :param server_url: Override the default server URL for this method
         :param timeout_ms: Override the default request timeout configuration for this method in milliseconds
@@ -55,6 +57,9 @@ class PropertyHistory(BaseSDK):
         url_variables = None
         if timeout_ms is None:
             timeout_ms = self.sdk_configuration.timeout_ms
+
+        if timeout_ms is None:
+            timeout_ms = 120000
 
         if server_url is not None:
             base_url = server_url
@@ -68,6 +73,7 @@ class PropertyHistory(BaseSDK):
             zip=zip,
             page=page,
             per_page=per_page,
+            limit=limit,
         )
 
         req = self._build_request(
@@ -104,6 +110,8 @@ class PropertyHistory(BaseSDK):
                 security_source=get_security_from_env(
                     self.sdk_configuration.security, models.Security
                 ),
+                tags=["Property History"],
+                extensions=None,
             ),
             request=req,
             is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
@@ -118,6 +126,9 @@ class PropertyHistory(BaseSDK):
                 errors.HTTPValidationErrorData, http_res
             )
             raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
         if utils.match_response(http_res, "4XX", "*"):
             http_res_text = utils.stream_to_text(http_res)
             raise errors.PermitstackDefaultError(
@@ -140,6 +151,7 @@ class PropertyHistory(BaseSDK):
         zip: OptionalNullable[str] = UNSET,
         page: Optional[int] = 1,
         per_page: Optional[int] = 50,
+        limit: OptionalNullable[int] = UNSET,
         retries: OptionalNullable[utils.RetryConfig] = UNSET,
         server_url: Optional[str] = None,
         timeout_ms: Optional[int] = None,
@@ -165,6 +177,7 @@ class PropertyHistory(BaseSDK):
         :param zip: Optional ZIP (prefix-matched)
         :param page:
         :param per_page:
+        :param limit: Alias of per_page.
         :param retries: Override the default retry configuration for this method
         :param server_url: Override the default server URL for this method
         :param timeout_ms: Override the default request timeout configuration for this method in milliseconds
@@ -174,6 +187,9 @@ class PropertyHistory(BaseSDK):
         url_variables = None
         if timeout_ms is None:
             timeout_ms = self.sdk_configuration.timeout_ms
+
+        if timeout_ms is None:
+            timeout_ms = 120000
 
         if server_url is not None:
             base_url = server_url
@@ -187,6 +203,7 @@ class PropertyHistory(BaseSDK):
             zip=zip,
             page=page,
             per_page=per_page,
+            limit=limit,
         )
 
         req = self._build_request_async(
@@ -223,6 +240,8 @@ class PropertyHistory(BaseSDK):
                 security_source=get_security_from_env(
                     self.sdk_configuration.security, models.Security
                 ),
+                tags=["Property History"],
+                extensions=None,
             ),
             request=req,
             is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
@@ -237,6 +256,9 @@ class PropertyHistory(BaseSDK):
                 errors.HTTPValidationErrorData, http_res
             )
             raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
         if utils.match_response(http_res, "4XX", "*"):
             http_res_text = await utils.stream_to_text_async(http_res)
             raise errors.PermitstackDefaultError(
@@ -257,6 +279,7 @@ class PropertyHistory(BaseSDK):
         state: OptionalNullable[str] = UNSET,
         page: Optional[int] = 1,
         per_page: Optional[int] = 50,
+        limit: OptionalNullable[int] = UNSET,
         retries: OptionalNullable[utils.RetryConfig] = UNSET,
         server_url: Optional[str] = None,
         timeout_ms: Optional[int] = None,
@@ -282,6 +305,7 @@ class PropertyHistory(BaseSDK):
         :param state: Optional 2-letter state to disambiguate the same parcel number across counties
         :param page:
         :param per_page:
+        :param limit: Alias of per_page.
         :param retries: Override the default retry configuration for this method
         :param server_url: Override the default server URL for this method
         :param timeout_ms: Override the default request timeout configuration for this method in milliseconds
@@ -291,6 +315,9 @@ class PropertyHistory(BaseSDK):
         url_variables = None
         if timeout_ms is None:
             timeout_ms = self.sdk_configuration.timeout_ms
+
+        if timeout_ms is None:
+            timeout_ms = 120000
 
         if server_url is not None:
             base_url = server_url
@@ -302,6 +329,7 @@ class PropertyHistory(BaseSDK):
             state=state,
             page=page,
             per_page=per_page,
+            limit=limit,
         )
 
         req = self._build_request(
@@ -338,6 +366,8 @@ class PropertyHistory(BaseSDK):
                 security_source=get_security_from_env(
                     self.sdk_configuration.security, models.Security
                 ),
+                tags=["Property History"],
+                extensions=None,
             ),
             request=req,
             is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
@@ -352,6 +382,9 @@ class PropertyHistory(BaseSDK):
                 errors.HTTPValidationErrorData, http_res
             )
             raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
         if utils.match_response(http_res, "4XX", "*"):
             http_res_text = utils.stream_to_text(http_res)
             raise errors.PermitstackDefaultError(
@@ -372,6 +405,7 @@ class PropertyHistory(BaseSDK):
         state: OptionalNullable[str] = UNSET,
         page: Optional[int] = 1,
         per_page: Optional[int] = 50,
+        limit: OptionalNullable[int] = UNSET,
         retries: OptionalNullable[utils.RetryConfig] = UNSET,
         server_url: Optional[str] = None,
         timeout_ms: Optional[int] = None,
@@ -397,6 +431,7 @@ class PropertyHistory(BaseSDK):
         :param state: Optional 2-letter state to disambiguate the same parcel number across counties
         :param page:
         :param per_page:
+        :param limit: Alias of per_page.
         :param retries: Override the default retry configuration for this method
         :param server_url: Override the default server URL for this method
         :param timeout_ms: Override the default request timeout configuration for this method in milliseconds
@@ -406,6 +441,9 @@ class PropertyHistory(BaseSDK):
         url_variables = None
         if timeout_ms is None:
             timeout_ms = self.sdk_configuration.timeout_ms
+
+        if timeout_ms is None:
+            timeout_ms = 120000
 
         if server_url is not None:
             base_url = server_url
@@ -417,6 +455,7 @@ class PropertyHistory(BaseSDK):
             state=state,
             page=page,
             per_page=per_page,
+            limit=limit,
         )
 
         req = self._build_request_async(
@@ -453,6 +492,8 @@ class PropertyHistory(BaseSDK):
                 security_source=get_security_from_env(
                     self.sdk_configuration.security, models.Security
                 ),
+                tags=["Property History"],
+                extensions=None,
             ),
             request=req,
             is_error_status_code=lambda c: utils.match_status_codes(["4XX", "5XX"], c),
@@ -467,6 +508,9 @@ class PropertyHistory(BaseSDK):
                 errors.HTTPValidationErrorData, http_res
             )
             raise errors.HTTPValidationError(response_data, http_res)
+        if utils.match_response(http_res, ["401", "429"], "application/json"):
+            response_data = unmarshal_json_response(errors.ErrorDetailData, http_res)
+            raise errors.ErrorDetail(response_data, http_res)
         if utils.match_response(http_res, "4XX", "*"):
             http_res_text = await utils.stream_to_text_async(http_res)
             raise errors.PermitstackDefaultError(

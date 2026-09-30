@@ -18,3 +18,4 @@ value: PermitStatus = "filed"
 - `"cancelled"`
 - `"revoked"`
 - `"unknown"`
+- `"interconnected"`

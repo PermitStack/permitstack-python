@@ -6,12 +6,18 @@ from typing import Any, TYPE_CHECKING
 from permitstack.utils.dynamic_imports import lazy_getattr, lazy_dir
 
 if TYPE_CHECKING:
+    from .errordetail import ErrorDetail, ErrorDetailData
+    from .featurelocked_error import FeatureLockedError, FeatureLockedErrorData
     from .httpvalidationerror import HTTPValidationError, HTTPValidationErrorData
     from .no_response_error import NoResponseError
     from .permitstackdefaulterror import PermitstackDefaultError
     from .responsevalidationerror import ResponseValidationError
 
 __all__ = [
+    "ErrorDetail",
+    "ErrorDetailData",
+    "FeatureLockedError",
+    "FeatureLockedErrorData",
     "HTTPValidationError",
     "HTTPValidationErrorData",
     "NoResponseError",
@@ -21,6 +27,10 @@ __all__ = [
 ]
 
 _dynamic_imports: dict[str, str] = {
+    "ErrorDetail": ".errordetail",
+    "ErrorDetailData": ".errordetail",
+    "FeatureLockedError": ".featurelocked_error",
+    "FeatureLockedErrorData": ".featurelocked_error",
     "HTTPValidationError": ".httpvalidationerror",
     "HTTPValidationErrorData": ".httpvalidationerror",
     "NoResponseError": ".no_response_error",

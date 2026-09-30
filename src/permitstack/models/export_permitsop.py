@@ -12,6 +12,7 @@ from permitstack.types import (
     UNSET_SENTINEL,
 )
 from permitstack.utils import FieldMetadata, QueryParamMetadata
+import pydantic
 from pydantic import model_serializer
 from typing import Optional
 from typing_extensions import Annotated, NotRequired, TypedDict
@@ -45,7 +46,22 @@ class ExportPermitsRequestTypedDict(TypedDict):
     scope: NotRequired[Nullable[str]]
     q: NotRequired[Nullable[str]]
     contractor_name: NotRequired[Nullable[str]]
+    owner_filed: NotRequired[Nullable[bool]]
+    r"""true = owner-filed permits only (no contractor on record, owner name present — often DIY/homeowner leads, though for feeds without contractor capture the owner may be a builder/institution); false = permits that have a contractor"""
+    jurisdiction: NotRequired[Nullable[str]]
+    r"""A jurisdiction's id (from /v1/jurisdictions) or its name, partial and case-insensitive -- the same matching as /v1/permits/search. Lets a full load be partitioned along the coverage list."""
     limit: NotRequired[int]
+    r"""Rows to return, up to your plan's export maximum (a larger value is refused with 403, never silently lowered). If more rows match than `limit`, the response header X-Permitstack-Truncated is `true`: narrow the filter or split the date range and export again."""
+    keyword: NotRequired[Nullable[str]]
+    r"""Alias of `q`."""
+    date_from: NotRequired[Nullable[date]]
+    r"""Alias of `date_after`."""
+    date_to: NotRequired[Nullable[date]]
+    r"""Alias of `date_before`."""
+    start_date: NotRequired[Nullable[date]]
+    r"""Alias of `date_after`."""
+    end_date: NotRequired[Nullable[date]]
+    r"""Alias of `date_before`."""
 
 
 class ExportPermitsRequest(BaseModel):
@@ -172,10 +188,68 @@ class ExportPermitsRequest(BaseModel):
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
     ] = UNSET
 
+    owner_filed: Annotated[
+        OptionalNullable[bool],
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+    r"""true = owner-filed permits only (no contractor on record, owner name present — often DIY/homeowner leads, though for feeds without contractor capture the owner may be a builder/institution); false = permits that have a contractor"""
+
+    jurisdiction: Annotated[
+        OptionalNullable[str],
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+    r"""A jurisdiction's id (from /v1/jurisdictions) or its name, partial and case-insensitive -- the same matching as /v1/permits/search. Lets a full load be partitioned along the coverage list."""
+
     limit: Annotated[
         Optional[int],
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
     ] = 1000
+    r"""Rows to return, up to your plan's export maximum (a larger value is refused with 403, never silently lowered). If more rows match than `limit`, the response header X-Permitstack-Truncated is `true`: narrow the filter or split the date range and export again."""
+
+    keyword: Annotated[
+        OptionalNullable[str],
+        pydantic.Field(
+            deprecated="warning: ** DEPRECATED ** - This will be removed in a future release, please migrate away from it as soon as possible."
+        ),
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+    r"""Alias of `q`."""
+
+    date_from: Annotated[
+        OptionalNullable[date],
+        pydantic.Field(
+            deprecated="warning: ** DEPRECATED ** - This will be removed in a future release, please migrate away from it as soon as possible."
+        ),
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+    r"""Alias of `date_after`."""
+
+    date_to: Annotated[
+        OptionalNullable[date],
+        pydantic.Field(
+            deprecated="warning: ** DEPRECATED ** - This will be removed in a future release, please migrate away from it as soon as possible."
+        ),
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+    r"""Alias of `date_before`."""
+
+    start_date: Annotated[
+        OptionalNullable[date],
+        pydantic.Field(
+            deprecated="warning: ** DEPRECATED ** - This will be removed in a future release, please migrate away from it as soon as possible."
+        ),
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+    r"""Alias of `date_after`."""
+
+    end_date: Annotated[
+        OptionalNullable[date],
+        pydantic.Field(
+            deprecated="warning: ** DEPRECATED ** - This will be removed in a future release, please migrate away from it as soon as possible."
+        ),
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+    r"""Alias of `date_before`."""
 
     @model_serializer(mode="wrap")
     def serialize_model(self, handler):
@@ -205,7 +279,14 @@ class ExportPermitsRequest(BaseModel):
                 "scope",
                 "q",
                 "contractor_name",
+                "owner_filed",
+                "jurisdiction",
                 "limit",
+                "keyword",
+                "date_from",
+                "date_to",
+                "start_date",
+                "end_date",
             ]
         )
         nullable_fields = set(
@@ -233,6 +314,13 @@ class ExportPermitsRequest(BaseModel):
                 "scope",
                 "q",
                 "contractor_name",
+                "owner_filed",
+                "jurisdiction",
+                "keyword",
+                "date_from",
+                "date_to",
+                "start_date",
+                "end_date",
             ]
         )
         serialized = handler(self)

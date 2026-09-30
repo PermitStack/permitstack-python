@@ -9,116 +9,265 @@ from permitstack.types import (
     OptionalNullable,
     UNSET,
     UNSET_SENTINEL,
+    UnrecognizedStr,
 )
 from pydantic import model_serializer
-from typing import List, Optional
+from typing import List, Literal, Optional, Union
 from typing_extensions import NotRequired, TypedDict
 
 
+PermitDetailStatus = Union[
+    Literal[
+        "FILED",
+        "ISSUED",
+        "IN_PROGRESS",
+        "FINAL",
+        "EXPIRED",
+        "CANCELLED",
+        "REVOKED",
+        "UNKNOWN",
+        "INTERCONNECTED",
+    ],
+    UnrecognizedStr,
+]
+r"""One of FILED, ISSUED, IN_PROGRESS, FINAL, EXPIRED, CANCELLED, REVOKED, INTERCONNECTED, UNKNOWN -- normalised by us from each source's own vocabulary. UNKNOWN means the source published no status, never that the permit is inactive. INTERCONNECTED comes from the California NEM solar feed."""
+
+
+PermitDetailCategory = Union[
+    Literal[
+        "NEW_CONSTRUCTION",
+        "RENOVATION",
+        "DEMOLITION",
+        "ELECTRICAL",
+        "PLUMBING",
+        "MECHANICAL",
+        "ROOFING",
+        "SOLAR",
+        "BATTERY",
+        "EV_CHARGER",
+        "HVAC",
+        "FIRE_ALARM",
+        "SIGN",
+        "FENCE",
+        "POOL",
+        "FOUNDATION",
+        "ADDITION",
+        "INTERIOR_REMODEL",
+        "GRADING",
+        "OTHER",
+    ],
+    UnrecognizedStr,
+]
+r"""Trade/work classification, UPPERCASE. One of: NEW_CONSTRUCTION, RENOVATION, DEMOLITION, ELECTRICAL, PLUMBING, MECHANICAL, ROOFING, SOLAR, BATTERY, EV_CHARGER, HVAC, FIRE_ALARM, SIGN, FENCE, POOL, FOUNDATION, ADDITION, INTERIOR_REMODEL, GRADING, OTHER. Derived by us from the permit type and description, not published by the city. NOTE when FILTERING: ?category=hvac matches HVAC *and* MECHANICAL, and ?category=mechanical does the same, because HVAC work is routinely filed as MECHANICAL -- they are one market and a bare equality would hide half of it."""
+
+
 class PermitDetailTypedDict(TypedDict):
+    r"""PermitSummary plus the nine columns that only a single-permit lookup used to carry.
+    Also returned inline by search and sync with ?fields=full (Developer and above).
+    """
+
     id: str
+    r"""Stable PermitStack id. Pass to GET /v1/permits/{id}."""
     permit_number: Nullable[str]
-    status: str
-    category: str
+    r"""The permit number as the issuing jurisdiction publishes it. Not unique across jurisdictions, and not always present."""
+    status: PermitDetailStatus
+    r"""One of FILED, ISSUED, IN_PROGRESS, FINAL, EXPIRED, CANCELLED, REVOKED, INTERCONNECTED, UNKNOWN -- normalised by us from each source's own vocabulary. UNKNOWN means the source published no status, never that the permit is inactive. INTERCONNECTED comes from the California NEM solar feed."""
+    category: PermitDetailCategory
+    r"""Trade/work classification, UPPERCASE. One of: NEW_CONSTRUCTION, RENOVATION, DEMOLITION, ELECTRICAL, PLUMBING, MECHANICAL, ROOFING, SOLAR, BATTERY, EV_CHARGER, HVAC, FIRE_ALARM, SIGN, FENCE, POOL, FOUNDATION, ADDITION, INTERIOR_REMODEL, GRADING, OTHER. Derived by us from the permit type and description, not published by the city. NOTE when FILTERING: ?category=hvac matches HVAC *and* MECHANICAL, and ?category=mechanical does the same, because HVAC work is routinely filed as MECHANICAL -- they are one market and a bare equality would hide half of it."""
     tags: Nullable[List[str]]
+    r"""Free-form keywords extracted from the description (e.g. 'pool', 'reroof'). Additive; do not rely on a fixed vocabulary."""
     property_type: str
+    r"""RESIDENTIAL, COMMERCIAL, INDUSTRIAL, MIXED_USE or UNKNOWN. UNKNOWN is common -- many feeds publish nothing that implies a property type."""
     address_street: Nullable[str]
+    r"""Street address as published. Stored verbatim, so spacing can be irregular; our address matching normalises whitespace for you."""
     address_city: Nullable[str]
+    r"""City. Null where the feed publishes none -- notably county-wide feeds. Read null as unknown, never as 'not in a city'."""
     address_state: Nullable[str]
+    r"""2-letter state. Null on 6.6M permits (7.3%) whose feed never populates it; those rows are still returned by ?state= searches, which admit them on independent evidence of the jurisdiction."""
     address_zip: Nullable[str]
+    r"""5-digit ZIP where published."""
     description_raw: Nullable[str]
+    r"""The scope of work exactly as the jurisdiction published it. The single most useful field for lead qualification, and the input our category classifier reads."""
     estimated_value: Nullable[float]
+    r"""Declared job value in USD, as published. Frequently null and occasionally nominal -- treat 0 and 1 as 'not stated'."""
     date_filed: Nullable[date]
+    r"""Application/filing date. Null where the source publishes only an issue date."""
     date_issued: Nullable[date]
+    r"""Issue date. Null on ~25% of permits estate-wide -- whole feeds publish only a filed date -- which is why date_after/date_before filter on COALESCE(date_issued, date_filed) and issued_after does not."""
     date_completed: Nullable[date]
+    r"""Completion/final date where the source publishes one. Usually null."""
     date_expired: Nullable[date]
+    r"""Expiry date where published. Deliberately NOT null-checked against the future the way the other dates are -- an expiry legitimately lies ahead."""
     stories: Nullable[int]
+    r"""Building stories, where published."""
     units: Nullable[int]
+    r"""Dwelling/tenant units, where published."""
     square_footage: Nullable[float]
+    r"""Project square footage, where published. Usually null."""
     applicant_name: Nullable[str]
-    owner_name: Nullable[str]
+    r"""Whoever filed the application. On most feeds this is the OWNER; on a few it is the contractor, and for those tenants we map it to contractor_name instead. Never assume which one it is from this field alone."""
+    parcel_id: NotRequired[Nullable[str]]
+    r"""Assessor parcel number / APN exactly as the SOURCE publishes it -- formatting varies by county and is not normalised. ~41% populated estate-wide and entirely dependent on whether the source publishes one, so read a null as 'this feed does not carry a parcel', never as 'this property has none'. Filterable via ?parcel=."""
+    approval_days: NotRequired[Nullable[int]]
+    r"""Calendar days from date_filed to date_issued (null unless both dates present)"""
+    construction_days: NotRequired[Nullable[int]]
+    r"""Calendar days from date_issued to date_completed (null unless both dates present)"""
     contractor_name: NotRequired[Nullable[str]]
+    r"""Contractor of record, cleaned and de-duplicated by us. Null where the feed publishes no contractor -- which is whole jurisdictions, not scattered rows: 45% of permits estate-wide carry one. A page of nulls usually means the source does not publish contractors, not that our data is missing; the `jurisdiction_coverage` block on a search response tells you which."""
+    contractor_id: NotRequired[Nullable[str]]
+    r"""Opaque id of the contractor on this permit. Pass it to GET /v1/contractors/{id} for the full record; null when the source publishes no contractor for this permit."""
+    owner_name: NotRequired[Nullable[str]]
+    r"""Owner of record. contractor_name null + owner_name set means no contractor was recorded -- often a homeowner who pulled the permit themselves, which is a sales lead. Caveat: on feeds that capture no contractor at all, EVERY permit looks owner-filed and the owner may be a builder, not a homeowner. Use the ?owner_filed= filter rather than inferring this yourself."""
+    owner_address: NotRequired[Nullable[str]]
+    r"""Property-owner MAILING address. Business plan ($149/mo) and above; null on every other plan, which is a gate and not an absence of data. Joined from county assessor rolls by parcel, so coverage is bimodal -- near-complete in the jurisdictions whose roll we have loaded, absent in those we have not. Never read a null as 'this property has no owner on record'."""
     jurisdiction_name: NotRequired[Nullable[str]]
+    r"""The PermitStack data source this permit came from -- a city, county or statewide feed, which is not always the permit's own city."""
     latitude: NotRequired[Nullable[float]]
+    r"""WGS84 latitude. Null where the source publishes no coordinates and we could not geocode it; such permits are invisible to radius, bbox and polygon search."""
     longitude: NotRequired[Nullable[float]]
+    r"""WGS84 longitude."""
+    location_source: NotRequired[Nullable[str]]
+    r"""Where the coordinates came from. 'source' = published by the city with the permit record, as good as the city's own data. 'geocoded' = derived by us from the site address (TIGER, address-centroid quality), which for a structure set back from the road, such as an antenna mast, marks the property address rather than the structure. 'derived' = set by us by another method (typically a parcel-centroid join), so treat it as ours, not the city's. 'source' is judged per feed: in a feed that publishes coordinates, a minority of rows whose record lacked them may have been filled by our geocoder before 2026-09-21, when it began logging successes, and those read 'source'. Null when latitude/longitude are null."""
     enrichment: NotRequired[Nullable[PermitEnrichmentTypedDict]]
+    r"""Structured detail parsed from the description (e.g. solar kW) where we could extract it. Null for most permits."""
     record_kind: NotRequired[str]
+    r"""permit | contractor | tag | non_building | admin. Some portals mix non-permit records (contractor registrations, right-of-way, administrative) into the same feed; we store them and label them rather than counting them as permits. Search and export return record_kind='permit' only unless you ask otherwise."""
     fee_amount: NotRequired[Nullable[float]]
     r"""Permit/inspection fee. Frequently null — most open-data feeds do not publish fee data."""
     contractor_license: NotRequired[Nullable[str]]
+    r"""Contractor's licence number as published or as matched against a state licence-board roster. A free public identifier; contact details remain gated to /v1/contractors/{id} on Developer+."""
     created_at: NotRequired[Nullable[str]]
+    r"""When PermitStack first ingested this record (ISO 8601). NOT a date the city published -- use date_filed/date_issued for that."""
 
 
 class PermitDetail(BaseModel):
+    r"""PermitSummary plus the nine columns that only a single-permit lookup used to carry.
+    Also returned inline by search and sync with ?fields=full (Developer and above).
+    """
+
     id: str
+    r"""Stable PermitStack id. Pass to GET /v1/permits/{id}."""
 
     permit_number: Nullable[str]
+    r"""The permit number as the issuing jurisdiction publishes it. Not unique across jurisdictions, and not always present."""
 
-    status: str
+    status: PermitDetailStatus
+    r"""One of FILED, ISSUED, IN_PROGRESS, FINAL, EXPIRED, CANCELLED, REVOKED, INTERCONNECTED, UNKNOWN -- normalised by us from each source's own vocabulary. UNKNOWN means the source published no status, never that the permit is inactive. INTERCONNECTED comes from the California NEM solar feed."""
 
-    category: str
+    category: PermitDetailCategory
+    r"""Trade/work classification, UPPERCASE. One of: NEW_CONSTRUCTION, RENOVATION, DEMOLITION, ELECTRICAL, PLUMBING, MECHANICAL, ROOFING, SOLAR, BATTERY, EV_CHARGER, HVAC, FIRE_ALARM, SIGN, FENCE, POOL, FOUNDATION, ADDITION, INTERIOR_REMODEL, GRADING, OTHER. Derived by us from the permit type and description, not published by the city. NOTE when FILTERING: ?category=hvac matches HVAC *and* MECHANICAL, and ?category=mechanical does the same, because HVAC work is routinely filed as MECHANICAL -- they are one market and a bare equality would hide half of it."""
 
     tags: Nullable[List[str]]
+    r"""Free-form keywords extracted from the description (e.g. 'pool', 'reroof'). Additive; do not rely on a fixed vocabulary."""
 
     property_type: str
+    r"""RESIDENTIAL, COMMERCIAL, INDUSTRIAL, MIXED_USE or UNKNOWN. UNKNOWN is common -- many feeds publish nothing that implies a property type."""
 
     address_street: Nullable[str]
+    r"""Street address as published. Stored verbatim, so spacing can be irregular; our address matching normalises whitespace for you."""
 
     address_city: Nullable[str]
+    r"""City. Null where the feed publishes none -- notably county-wide feeds. Read null as unknown, never as 'not in a city'."""
 
     address_state: Nullable[str]
+    r"""2-letter state. Null on 6.6M permits (7.3%) whose feed never populates it; those rows are still returned by ?state= searches, which admit them on independent evidence of the jurisdiction."""
 
     address_zip: Nullable[str]
+    r"""5-digit ZIP where published."""
 
     description_raw: Nullable[str]
+    r"""The scope of work exactly as the jurisdiction published it. The single most useful field for lead qualification, and the input our category classifier reads."""
 
     estimated_value: Nullable[float]
+    r"""Declared job value in USD, as published. Frequently null and occasionally nominal -- treat 0 and 1 as 'not stated'."""
 
     date_filed: Nullable[date]
+    r"""Application/filing date. Null where the source publishes only an issue date."""
 
     date_issued: Nullable[date]
+    r"""Issue date. Null on ~25% of permits estate-wide -- whole feeds publish only a filed date -- which is why date_after/date_before filter on COALESCE(date_issued, date_filed) and issued_after does not."""
 
     date_completed: Nullable[date]
+    r"""Completion/final date where the source publishes one. Usually null."""
 
     date_expired: Nullable[date]
+    r"""Expiry date where published. Deliberately NOT null-checked against the future the way the other dates are -- an expiry legitimately lies ahead."""
 
     stories: Nullable[int]
+    r"""Building stories, where published."""
 
     units: Nullable[int]
+    r"""Dwelling/tenant units, where published."""
 
     square_footage: Nullable[float]
+    r"""Project square footage, where published. Usually null."""
 
     applicant_name: Nullable[str]
+    r"""Whoever filed the application. On most feeds this is the OWNER; on a few it is the contractor, and for those tenants we map it to contractor_name instead. Never assume which one it is from this field alone."""
 
-    owner_name: Nullable[str]
+    parcel_id: OptionalNullable[str] = UNSET
+    r"""Assessor parcel number / APN exactly as the SOURCE publishes it -- formatting varies by county and is not normalised. ~41% populated estate-wide and entirely dependent on whether the source publishes one, so read a null as 'this feed does not carry a parcel', never as 'this property has none'. Filterable via ?parcel=."""
+
+    approval_days: OptionalNullable[int] = UNSET
+    r"""Calendar days from date_filed to date_issued (null unless both dates present)"""
+
+    construction_days: OptionalNullable[int] = UNSET
+    r"""Calendar days from date_issued to date_completed (null unless both dates present)"""
 
     contractor_name: OptionalNullable[str] = UNSET
+    r"""Contractor of record, cleaned and de-duplicated by us. Null where the feed publishes no contractor -- which is whole jurisdictions, not scattered rows: 45% of permits estate-wide carry one. A page of nulls usually means the source does not publish contractors, not that our data is missing; the `jurisdiction_coverage` block on a search response tells you which."""
+
+    contractor_id: OptionalNullable[str] = UNSET
+    r"""Opaque id of the contractor on this permit. Pass it to GET /v1/contractors/{id} for the full record; null when the source publishes no contractor for this permit."""
+
+    owner_name: OptionalNullable[str] = UNSET
+    r"""Owner of record. contractor_name null + owner_name set means no contractor was recorded -- often a homeowner who pulled the permit themselves, which is a sales lead. Caveat: on feeds that capture no contractor at all, EVERY permit looks owner-filed and the owner may be a builder, not a homeowner. Use the ?owner_filed= filter rather than inferring this yourself."""
+
+    owner_address: OptionalNullable[str] = UNSET
+    r"""Property-owner MAILING address. Business plan ($149/mo) and above; null on every other plan, which is a gate and not an absence of data. Joined from county assessor rolls by parcel, so coverage is bimodal -- near-complete in the jurisdictions whose roll we have loaded, absent in those we have not. Never read a null as 'this property has no owner on record'."""
 
     jurisdiction_name: OptionalNullable[str] = UNSET
+    r"""The PermitStack data source this permit came from -- a city, county or statewide feed, which is not always the permit's own city."""
 
     latitude: OptionalNullable[float] = UNSET
+    r"""WGS84 latitude. Null where the source publishes no coordinates and we could not geocode it; such permits are invisible to radius, bbox and polygon search."""
 
     longitude: OptionalNullable[float] = UNSET
+    r"""WGS84 longitude."""
+
+    location_source: OptionalNullable[str] = UNSET
+    r"""Where the coordinates came from. 'source' = published by the city with the permit record, as good as the city's own data. 'geocoded' = derived by us from the site address (TIGER, address-centroid quality), which for a structure set back from the road, such as an antenna mast, marks the property address rather than the structure. 'derived' = set by us by another method (typically a parcel-centroid join), so treat it as ours, not the city's. 'source' is judged per feed: in a feed that publishes coordinates, a minority of rows whose record lacked them may have been filled by our geocoder before 2026-09-21, when it began logging successes, and those read 'source'. Null when latitude/longitude are null."""
 
     enrichment: OptionalNullable[PermitEnrichment] = UNSET
+    r"""Structured detail parsed from the description (e.g. solar kW) where we could extract it. Null for most permits."""
 
     record_kind: Optional[str] = "permit"
+    r"""permit | contractor | tag | non_building | admin. Some portals mix non-permit records (contractor registrations, right-of-way, administrative) into the same feed; we store them and label them rather than counting them as permits. Search and export return record_kind='permit' only unless you ask otherwise."""
 
     fee_amount: OptionalNullable[float] = UNSET
     r"""Permit/inspection fee. Frequently null — most open-data feeds do not publish fee data."""
 
     contractor_license: OptionalNullable[str] = UNSET
+    r"""Contractor's licence number as published or as matched against a state licence-board roster. A free public identifier; contact details remain gated to /v1/contractors/{id} on Developer+."""
 
     created_at: OptionalNullable[str] = UNSET
+    r"""When PermitStack first ingested this record (ISO 8601). NOT a date the city published -- use date_filed/date_issued for that."""
 
     @model_serializer(mode="wrap")
     def serialize_model(self, handler):
         optional_fields = set(
             [
+                "parcel_id",
+                "approval_days",
+                "construction_days",
                 "contractor_name",
+                "contractor_id",
+                "owner_name",
+                "owner_address",
                 "jurisdiction_name",
                 "latitude",
                 "longitude",
+                "location_source",
                 "enrichment",
                 "record_kind",
                 "fee_amount",
@@ -134,15 +283,22 @@ class PermitDetail(BaseModel):
                 "address_city",
                 "address_state",
                 "address_zip",
+                "parcel_id",
                 "description_raw",
                 "estimated_value",
                 "date_filed",
                 "date_issued",
                 "date_completed",
+                "approval_days",
+                "construction_days",
                 "contractor_name",
+                "contractor_id",
+                "owner_name",
+                "owner_address",
                 "jurisdiction_name",
                 "latitude",
                 "longitude",
+                "location_source",
                 "enrichment",
                 "date_expired",
                 "fee_amount",
@@ -150,7 +306,6 @@ class PermitDetail(BaseModel):
                 "units",
                 "square_footage",
                 "applicant_name",
-                "owner_name",
                 "contractor_license",
                 "created_at",
             ]

@@ -27,6 +27,12 @@ class PermitEventOutTypedDict(TypedDict):
     address_state: NotRequired[Nullable[str]]
     category: NotRequired[Nullable[str]]
     jurisdiction_name: NotRequired[Nullable[str]]
+    contractor_id: NotRequired[Nullable[str]]
+    r"""Stable id of the contractor of record, joinable to /v1/contractors/{id}. Null where the source publishes no contractor."""
+    property_type: NotRequired[Nullable[str]]
+    r"""RESIDENTIAL, COMMERCIAL, MIXED_USE, ... or UNKNOWN, as on /v1/permits/search."""
+    description: NotRequired[Nullable[str]]
+    r"""The permit's scope of work as the jurisdiction published it (description_raw on search)."""
 
 
 class PermitEventOut(BaseModel):
@@ -56,6 +62,15 @@ class PermitEventOut(BaseModel):
 
     jurisdiction_name: OptionalNullable[str] = UNSET
 
+    contractor_id: OptionalNullable[str] = UNSET
+    r"""Stable id of the contractor of record, joinable to /v1/contractors/{id}. Null where the source publishes no contractor."""
+
+    property_type: OptionalNullable[str] = UNSET
+    r"""RESIDENTIAL, COMMERCIAL, MIXED_USE, ... or UNKNOWN, as on /v1/permits/search."""
+
+    description: OptionalNullable[str] = UNSET
+    r"""The permit's scope of work as the jurisdiction published it (description_raw on search)."""
+
     @model_serializer(mode="wrap")
     def serialize_model(self, handler):
         optional_fields = set(
@@ -69,6 +84,9 @@ class PermitEventOut(BaseModel):
                 "address_state",
                 "category",
                 "jurisdiction_name",
+                "contractor_id",
+                "property_type",
+                "description",
             ]
         )
         nullable_fields = set(
@@ -82,6 +100,9 @@ class PermitEventOut(BaseModel):
                 "address_state",
                 "category",
                 "jurisdiction_name",
+                "contractor_id",
+                "property_type",
+                "description",
             ]
         )
         serialized = handler(self)

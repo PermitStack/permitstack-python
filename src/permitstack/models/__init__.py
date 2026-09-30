@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from .coverageconfidence import CoverageConfidence, CoverageConfidenceTypedDict
     from .delete_webhookop import DeleteWebhookRequest, DeleteWebhookRequestTypedDict
     from .export_permitsop import ExportPermitsRequest, ExportPermitsRequestTypedDict
+    from .featurelocked_error import Detail, DetailTypedDict, Error
     from .get_contractor_permitsop import (
         GetContractorPermitsRequest,
         GetContractorPermitsRequestTypedDict,
@@ -36,16 +37,33 @@ if TYPE_CHECKING:
         GetPropertyHistoryRequest,
         GetPropertyHistoryRequestTypedDict,
     )
+    from .get_webhook_deliveriesop import (
+        GetWebhookDeliveriesRequest,
+        GetWebhookDeliveriesRequestTypedDict,
+    )
     from .get_webhook_secretop import (
         GetWebhookSecretRequest,
         GetWebhookSecretRequestTypedDict,
+    )
+    from .hint import Hint, HintTypedDict
+    from .jurisdictioncoverage import (
+        JurisdictionCoverage,
+        JurisdictionCoverageTypedDict,
     )
     from .list_permit_eventsop import (
         ListPermitEventsRequest,
         ListPermitEventsRequestTypedDict,
     )
+    from .metrics_citiesop import MetricsCitiesRequest, MetricsCitiesRequestTypedDict
+    from .metrics_currentop import MetricsCurrentRequest, MetricsCurrentRequestTypedDict
+    from .metrics_monthlyop import MetricsMonthlyRequest, MetricsMonthlyRequestTypedDict
     from .orphan_recoveryop import OrphanRecoveryRequest, OrphanRecoveryRequestTypedDict
-    from .permitdetail import PermitDetail, PermitDetailTypedDict
+    from .permitdetail import (
+        PermitDetail,
+        PermitDetailCategory,
+        PermitDetailStatus,
+        PermitDetailTypedDict,
+    )
     from .permitenrichment import PermitEnrichment, PermitEnrichmentTypedDict
     from .permiteventout import PermitEventOut, PermitEventOutTypedDict
     from .permiteventsresponse import (
@@ -57,7 +75,12 @@ if TYPE_CHECKING:
         PermitSearchResponseTypedDict,
     )
     from .permitstatus import PermitStatus
-    from .permitsummary import PermitSummary, PermitSummaryTypedDict
+    from .permitsummary import (
+        PermitSummary,
+        PermitSummaryCategory,
+        PermitSummaryStatus,
+        PermitSummaryTypedDict,
+    )
     from .propertyhistoryresponse import (
         PropertyHistoryResponse,
         PropertyHistoryResponseTypedDict,
@@ -66,13 +89,21 @@ if TYPE_CHECKING:
     from .propertysignals import PropertySignals, PropertySignalsTypedDict
     from .propertysummary import PropertySummary, PropertySummaryTypedDict
     from .propertytype import PropertyType
+    from .reroof_dueop import ReroofDueRequest, ReroofDueRequestTypedDict
+    from .rotate_webhook_secretop import (
+        RotateWebhookSecretRequest,
+        RotateWebhookSecretRequestTypedDict,
+    )
     from .search_contractorsop import (
         SearchContractorsRequest,
         SearchContractorsRequestTypedDict,
     )
     from .search_permitsop import SearchPermitsRequest, SearchPermitsRequestTypedDict
     from .security import Security, SecurityTypedDict
+    from .sync_permitsop import SyncPermitsRequest, SyncPermitsRequestTypedDict
+    from .system_ageop import SystemAgeRequest, SystemAgeRequestTypedDict
     from .test_webhookop import TestWebhookRequest, TestWebhookRequestTypedDict
+    from .update_webhookop import UpdateWebhookRequest, UpdateWebhookRequestTypedDict
     from .validationerror import (
         Context,
         ContextTypedDict,
@@ -98,6 +129,9 @@ __all__ = [
     "CoverageConfidenceTypedDict",
     "DeleteWebhookRequest",
     "DeleteWebhookRequestTypedDict",
+    "Detail",
+    "DetailTypedDict",
+    "Error",
     "ExportPermitsRequest",
     "ExportPermitsRequestTypedDict",
     "GetContractorPermitsRequest",
@@ -112,15 +146,29 @@ __all__ = [
     "GetPropertyByParcelRequestTypedDict",
     "GetPropertyHistoryRequest",
     "GetPropertyHistoryRequestTypedDict",
+    "GetWebhookDeliveriesRequest",
+    "GetWebhookDeliveriesRequestTypedDict",
     "GetWebhookSecretRequest",
     "GetWebhookSecretRequestTypedDict",
+    "Hint",
+    "HintTypedDict",
+    "JurisdictionCoverage",
+    "JurisdictionCoverageTypedDict",
     "ListPermitEventsRequest",
     "ListPermitEventsRequestTypedDict",
     "Loc",
     "LocTypedDict",
+    "MetricsCitiesRequest",
+    "MetricsCitiesRequestTypedDict",
+    "MetricsCurrentRequest",
+    "MetricsCurrentRequestTypedDict",
+    "MetricsMonthlyRequest",
+    "MetricsMonthlyRequestTypedDict",
     "OrphanRecoveryRequest",
     "OrphanRecoveryRequestTypedDict",
     "PermitDetail",
+    "PermitDetailCategory",
+    "PermitDetailStatus",
     "PermitDetailTypedDict",
     "PermitEnrichment",
     "PermitEnrichmentTypedDict",
@@ -132,6 +180,8 @@ __all__ = [
     "PermitSearchResponseTypedDict",
     "PermitStatus",
     "PermitSummary",
+    "PermitSummaryCategory",
+    "PermitSummaryStatus",
     "PermitSummaryTypedDict",
     "PropertyHistoryResponse",
     "PropertyHistoryResponseTypedDict",
@@ -142,14 +192,24 @@ __all__ = [
     "PropertySummary",
     "PropertySummaryTypedDict",
     "PropertyType",
+    "ReroofDueRequest",
+    "ReroofDueRequestTypedDict",
+    "RotateWebhookSecretRequest",
+    "RotateWebhookSecretRequestTypedDict",
     "SearchContractorsRequest",
     "SearchContractorsRequestTypedDict",
     "SearchPermitsRequest",
     "SearchPermitsRequestTypedDict",
     "Security",
     "SecurityTypedDict",
+    "SyncPermitsRequest",
+    "SyncPermitsRequestTypedDict",
+    "SystemAgeRequest",
+    "SystemAgeRequestTypedDict",
     "TestWebhookRequest",
     "TestWebhookRequestTypedDict",
+    "UpdateWebhookRequest",
+    "UpdateWebhookRequestTypedDict",
     "ValidationError",
     "ValidationErrorTypedDict",
     "WebhookCreate",
@@ -171,6 +231,9 @@ _dynamic_imports: dict[str, str] = {
     "DeleteWebhookRequestTypedDict": ".delete_webhookop",
     "ExportPermitsRequest": ".export_permitsop",
     "ExportPermitsRequestTypedDict": ".export_permitsop",
+    "Detail": ".featurelocked_error",
+    "DetailTypedDict": ".featurelocked_error",
+    "Error": ".featurelocked_error",
     "GetContractorPermitsRequest": ".get_contractor_permitsop",
     "GetContractorPermitsRequestTypedDict": ".get_contractor_permitsop",
     "GetContractorRequest": ".get_contractorop",
@@ -183,13 +246,27 @@ _dynamic_imports: dict[str, str] = {
     "GetPropertyByParcelRequestTypedDict": ".get_property_by_parcelop",
     "GetPropertyHistoryRequest": ".get_property_historyop",
     "GetPropertyHistoryRequestTypedDict": ".get_property_historyop",
+    "GetWebhookDeliveriesRequest": ".get_webhook_deliveriesop",
+    "GetWebhookDeliveriesRequestTypedDict": ".get_webhook_deliveriesop",
     "GetWebhookSecretRequest": ".get_webhook_secretop",
     "GetWebhookSecretRequestTypedDict": ".get_webhook_secretop",
+    "Hint": ".hint",
+    "HintTypedDict": ".hint",
+    "JurisdictionCoverage": ".jurisdictioncoverage",
+    "JurisdictionCoverageTypedDict": ".jurisdictioncoverage",
     "ListPermitEventsRequest": ".list_permit_eventsop",
     "ListPermitEventsRequestTypedDict": ".list_permit_eventsop",
+    "MetricsCitiesRequest": ".metrics_citiesop",
+    "MetricsCitiesRequestTypedDict": ".metrics_citiesop",
+    "MetricsCurrentRequest": ".metrics_currentop",
+    "MetricsCurrentRequestTypedDict": ".metrics_currentop",
+    "MetricsMonthlyRequest": ".metrics_monthlyop",
+    "MetricsMonthlyRequestTypedDict": ".metrics_monthlyop",
     "OrphanRecoveryRequest": ".orphan_recoveryop",
     "OrphanRecoveryRequestTypedDict": ".orphan_recoveryop",
     "PermitDetail": ".permitdetail",
+    "PermitDetailCategory": ".permitdetail",
+    "PermitDetailStatus": ".permitdetail",
     "PermitDetailTypedDict": ".permitdetail",
     "PermitEnrichment": ".permitenrichment",
     "PermitEnrichmentTypedDict": ".permitenrichment",
@@ -201,6 +278,8 @@ _dynamic_imports: dict[str, str] = {
     "PermitSearchResponseTypedDict": ".permitsearchresponse",
     "PermitStatus": ".permitstatus",
     "PermitSummary": ".permitsummary",
+    "PermitSummaryCategory": ".permitsummary",
+    "PermitSummaryStatus": ".permitsummary",
     "PermitSummaryTypedDict": ".permitsummary",
     "PropertyHistoryResponse": ".propertyhistoryresponse",
     "PropertyHistoryResponseTypedDict": ".propertyhistoryresponse",
@@ -211,14 +290,24 @@ _dynamic_imports: dict[str, str] = {
     "PropertySummary": ".propertysummary",
     "PropertySummaryTypedDict": ".propertysummary",
     "PropertyType": ".propertytype",
+    "ReroofDueRequest": ".reroof_dueop",
+    "ReroofDueRequestTypedDict": ".reroof_dueop",
+    "RotateWebhookSecretRequest": ".rotate_webhook_secretop",
+    "RotateWebhookSecretRequestTypedDict": ".rotate_webhook_secretop",
     "SearchContractorsRequest": ".search_contractorsop",
     "SearchContractorsRequestTypedDict": ".search_contractorsop",
     "SearchPermitsRequest": ".search_permitsop",
     "SearchPermitsRequestTypedDict": ".search_permitsop",
     "Security": ".security",
     "SecurityTypedDict": ".security",
+    "SyncPermitsRequest": ".sync_permitsop",
+    "SyncPermitsRequestTypedDict": ".sync_permitsop",
+    "SystemAgeRequest": ".system_ageop",
+    "SystemAgeRequestTypedDict": ".system_ageop",
     "TestWebhookRequest": ".test_webhookop",
     "TestWebhookRequestTypedDict": ".test_webhookop",
+    "UpdateWebhookRequest": ".update_webhookop",
+    "UpdateWebhookRequestTypedDict": ".update_webhookop",
     "Context": ".validationerror",
     "ContextTypedDict": ".validationerror",
     "Loc": ".validationerror",

@@ -31,6 +31,9 @@ class ContractorProfileTypedDict(TypedDict):
     zip_code: Nullable[str]
     score: NotRequired[Nullable[int]]
     is_business: NotRequired[Nullable[bool]]
+    contact_locked: NotRequired[Nullable[bool]]
+    locked_fields: NotRequired[Nullable[List[str]]]
+    upgrade_url: NotRequired[Nullable[str]]
     recent_categories: NotRequired[Nullable[List[str]]]
     avg_project_value: NotRequired[Nullable[float]]
 
@@ -68,6 +71,12 @@ class ContractorProfile(BaseModel):
 
     is_business: OptionalNullable[bool] = UNSET
 
+    contact_locked: OptionalNullable[bool] = UNSET
+
+    locked_fields: OptionalNullable[List[str]] = UNSET
+
+    upgrade_url: OptionalNullable[str] = UNSET
+
     recent_categories: OptionalNullable[List[str]] = UNSET
 
     avg_project_value: OptionalNullable[float] = UNSET
@@ -75,7 +84,15 @@ class ContractorProfile(BaseModel):
     @model_serializer(mode="wrap")
     def serialize_model(self, handler):
         optional_fields = set(
-            ["score", "is_business", "recent_categories", "avg_project_value"]
+            [
+                "score",
+                "is_business",
+                "contact_locked",
+                "locked_fields",
+                "upgrade_url",
+                "recent_categories",
+                "avg_project_value",
+            ]
         )
         nullable_fields = set(
             [
@@ -90,6 +107,9 @@ class ContractorProfile(BaseModel):
                 "is_business",
                 "phone",
                 "email",
+                "contact_locked",
+                "locked_fields",
+                "upgrade_url",
                 "address",
                 "zip_code",
                 "recent_categories",

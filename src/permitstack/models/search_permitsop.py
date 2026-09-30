@@ -12,6 +12,7 @@ from permitstack.types import (
     UNSET_SENTINEL,
 )
 from permitstack.utils import FieldMetadata, QueryParamMetadata
+import pydantic
 from pydantic import model_serializer
 from typing import Optional
 from typing_extensions import Annotated, NotRequired, TypedDict
@@ -34,6 +35,8 @@ class SearchPermitsRequestTypedDict(TypedDict):
     r"""Longitude for radius search"""
     radius_miles: NotRequired[float]
     r"""Radius in miles (used with lat/lng)"""
+    fields: NotRequired[str]
+    r"""'summary' (default) or 'full'. With 'full' each result is a PermitDetail rather than a PermitSummary -- the same nine extra columns GET /v1/permits/{id} returns (record_kind, date_expired, fee_amount, stories, units, square_footage, applicant_name, contractor_license, created_at) -- so you do not fetch them one permit at a time. See the PermitDetail schema for their types; the declared response schema here is PermitSummary, which is the default shape. Developer plan and above."""
     bbox: NotRequired[Nullable[str]]
     r"""Map-viewport bounding box 'minLng,minLat,maxLng,maxLat'. Returns permits whose location falls inside the box (geocoded permits only)."""
     polygon: NotRequired[Nullable[str]]
@@ -77,11 +80,30 @@ class SearchPermitsRequestTypedDict(TypedDict):
     scope: NotRequired[Nullable[str]]
     r"""Substring match on the enriched work scope"""
     q: NotRequired[Nullable[str]]
-    r"""Case-insensitive substring match across description, address, and permit number"""
+    r"""Case-insensitive substring match across description, address, and permit number. Terms under 3 characters are matched but not counted: `total` is null with total_unknown=true (a 1-2 character term has no trigram index and the count would cost tens of seconds)."""
     contractor_name: NotRequired[Nullable[str]]
     r"""Contractor name (partial match)"""
+    owner_filed: NotRequired[Nullable[bool]]
+    r"""true = owner-filed permits only (no contractor on record but an owner name is present — often a DIY/homeowner lead, though for feeds that don't capture contractors the owner may be a builder or institution); false = permits that have a contractor"""
+    has_owner_address: NotRequired[Nullable[bool]]
+    r"""true = only permits that carry a property-owner mailing address; false = only those that do not. Coverage varies sharply by jurisdiction (we hold the county assessor roll for some and not others), so this is a targeting filter rather than a defect: it returns exactly the rows that are actionable. The address itself is visible on Business and above."""
     page: NotRequired[int]
     per_page: NotRequired[int]
+    r"""Results per page. Above your plan's maximum this is clamped, not rejected; the response echoes the per_page actually applied."""
+    keyword: NotRequired[Nullable[str]]
+    r"""Alias of `q`."""
+    date_from: NotRequired[Nullable[date]]
+    r"""Alias of `date_after`."""
+    date_to: NotRequired[Nullable[date]]
+    r"""Alias of `date_before`."""
+    start_date: NotRequired[Nullable[date]]
+    r"""Alias of `date_after`."""
+    end_date: NotRequired[Nullable[date]]
+    r"""Alias of `date_before`."""
+    limit: NotRequired[Nullable[int]]
+    r"""Alias of `per_page`. Clamped to your plan's maximum, not rejected."""
+    count_only: NotRequired[bool]
+    r"""Return only the total for these filters -- no permit records. Skips the row fetch entirely, so it is markedly cheaper for both of us when you are sizing a query rather than reading it. `results` comes back empty and `total_capped` / `total_unknown` mean exactly what they always do."""
 
 
 class SearchPermitsRequest(BaseModel):
@@ -130,8 +152,14 @@ class SearchPermitsRequest(BaseModel):
     radius_miles: Annotated[
         Optional[float],
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
-    ] = 5
+    ] = 5.0
     r"""Radius in miles (used with lat/lng)"""
+
+    fields: Annotated[
+        Optional[str],
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = "summary"
+    r"""'summary' (default) or 'full'. With 'full' each result is a PermitDetail rather than a PermitSummary -- the same nine extra columns GET /v1/permits/{id} returns (record_kind, date_expired, fee_amount, stories, units, square_footage, applicant_name, contractor_license, created_at) -- so you do not fetch them one permit at a time. See the PermitDetail schema for their types; the declared response schema here is PermitSummary, which is the default shape. Developer plan and above."""
 
     bbox: Annotated[
         OptionalNullable[str],
@@ -263,13 +291,25 @@ class SearchPermitsRequest(BaseModel):
         OptionalNullable[str],
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
     ] = UNSET
-    r"""Case-insensitive substring match across description, address, and permit number"""
+    r"""Case-insensitive substring match across description, address, and permit number. Terms under 3 characters are matched but not counted: `total` is null with total_unknown=true (a 1-2 character term has no trigram index and the count would cost tens of seconds)."""
 
     contractor_name: Annotated[
         OptionalNullable[str],
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
     ] = UNSET
     r"""Contractor name (partial match)"""
+
+    owner_filed: Annotated[
+        OptionalNullable[bool],
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+    r"""true = owner-filed permits only (no contractor on record but an owner name is present — often a DIY/homeowner lead, though for feeds that don't capture contractors the owner may be a builder or institution); false = permits that have a contractor"""
+
+    has_owner_address: Annotated[
+        OptionalNullable[bool],
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+    r"""true = only permits that carry a property-owner mailing address; false = only those that do not. Coverage varies sharply by jurisdiction (we hold the county assessor roll for some and not others), so this is a targeting filter rather than a defect: it returns exactly the rows that are actionable. The address itself is visible on Business and above."""
 
     page: Annotated[
         Optional[int],
@@ -280,6 +320,67 @@ class SearchPermitsRequest(BaseModel):
         Optional[int],
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
     ] = 25
+    r"""Results per page. Above your plan's maximum this is clamped, not rejected; the response echoes the per_page actually applied."""
+
+    keyword: Annotated[
+        OptionalNullable[str],
+        pydantic.Field(
+            deprecated="warning: ** DEPRECATED ** - This will be removed in a future release, please migrate away from it as soon as possible."
+        ),
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+    r"""Alias of `q`."""
+
+    date_from: Annotated[
+        OptionalNullable[date],
+        pydantic.Field(
+            deprecated="warning: ** DEPRECATED ** - This will be removed in a future release, please migrate away from it as soon as possible."
+        ),
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+    r"""Alias of `date_after`."""
+
+    date_to: Annotated[
+        OptionalNullable[date],
+        pydantic.Field(
+            deprecated="warning: ** DEPRECATED ** - This will be removed in a future release, please migrate away from it as soon as possible."
+        ),
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+    r"""Alias of `date_before`."""
+
+    start_date: Annotated[
+        OptionalNullable[date],
+        pydantic.Field(
+            deprecated="warning: ** DEPRECATED ** - This will be removed in a future release, please migrate away from it as soon as possible."
+        ),
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+    r"""Alias of `date_after`."""
+
+    end_date: Annotated[
+        OptionalNullable[date],
+        pydantic.Field(
+            deprecated="warning: ** DEPRECATED ** - This will be removed in a future release, please migrate away from it as soon as possible."
+        ),
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+    r"""Alias of `date_before`."""
+
+    limit: Annotated[
+        OptionalNullable[int],
+        pydantic.Field(
+            deprecated="warning: ** DEPRECATED ** - This will be removed in a future release, please migrate away from it as soon as possible."
+        ),
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+    r"""Alias of `per_page`. Clamped to your plan's maximum, not rejected."""
+
+    count_only: Annotated[
+        Optional[bool],
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = False
+    r"""Return only the total for these filters -- no permit records. Skips the row fetch entirely, so it is markedly cheaper for both of us when you are sizing a query rather than reading it. `results` comes back empty and `total_capped` / `total_unknown` mean exactly what they always do."""
 
     @model_serializer(mode="wrap")
     def serialize_model(self, handler):
@@ -293,6 +394,7 @@ class SearchPermitsRequest(BaseModel):
                 "lat",
                 "lng",
                 "radius_miles",
+                "fields",
                 "bbox",
                 "polygon",
                 "category",
@@ -316,8 +418,17 @@ class SearchPermitsRequest(BaseModel):
                 "scope",
                 "q",
                 "contractor_name",
+                "owner_filed",
+                "has_owner_address",
                 "page",
                 "per_page",
+                "keyword",
+                "date_from",
+                "date_to",
+                "start_date",
+                "end_date",
+                "limit",
+                "count_only",
             ]
         )
         nullable_fields = set(
@@ -351,6 +462,14 @@ class SearchPermitsRequest(BaseModel):
                 "scope",
                 "q",
                 "contractor_name",
+                "owner_filed",
+                "has_owner_address",
+                "keyword",
+                "date_from",
+                "date_to",
+                "start_date",
+                "end_date",
+                "limit",
             ]
         )
         serialized = handler(self)

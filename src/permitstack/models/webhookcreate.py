@@ -18,7 +18,9 @@ class WebhookCreateTypedDict(TypedDict):
     state: NotRequired[Nullable[str]]
     category: NotRequired[Nullable[str]]
     zip_code: NotRequired[Nullable[str]]
-    description: NotRequired[Nullable[str]]
+    keyword: NotRequired[Nullable[str]]
+    contractor_name: NotRequired[Nullable[str]]
+    r"""Fire only for permits pulled by contractors whose name contains this text (case-insensitive) — track a competitor or partner as their new permits arrive."""
 
 
 class WebhookCreate(BaseModel):
@@ -32,12 +34,19 @@ class WebhookCreate(BaseModel):
 
     zip_code: OptionalNullable[str] = UNSET
 
-    description: OptionalNullable[str] = UNSET
+    keyword: OptionalNullable[str] = UNSET
+
+    contractor_name: OptionalNullable[str] = UNSET
+    r"""Fire only for permits pulled by contractors whose name contains this text (case-insensitive) — track a competitor or partner as their new permits arrive."""
 
     @model_serializer(mode="wrap")
     def serialize_model(self, handler):
-        optional_fields = set(["city", "state", "category", "zip_code", "description"])
-        nullable_fields = set(["city", "state", "category", "zip_code", "description"])
+        optional_fields = set(
+            ["city", "state", "category", "zip_code", "keyword", "contractor_name"]
+        )
+        nullable_fields = set(
+            ["city", "state", "category", "zip_code", "keyword", "contractor_name"]
+        )
         serialized = handler(self)
         m = {}
 

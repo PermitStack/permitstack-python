@@ -25,6 +25,8 @@ class GetPropertyHistoryRequestTypedDict(TypedDict):
     r"""Optional ZIP (prefix-matched)"""
     page: NotRequired[int]
     per_page: NotRequired[int]
+    limit: NotRequired[Nullable[int]]
+    r"""Alias of per_page."""
 
 
 class GetPropertyHistoryRequest(BaseModel):
@@ -61,10 +63,16 @@ class GetPropertyHistoryRequest(BaseModel):
         FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
     ] = 50
 
+    limit: Annotated[
+        OptionalNullable[int],
+        FieldMetadata(query=QueryParamMetadata(style="form", explode=True)),
+    ] = UNSET
+    r"""Alias of per_page."""
+
     @model_serializer(mode="wrap")
     def serialize_model(self, handler):
-        optional_fields = set(["city", "state", "zip", "page", "per_page"])
-        nullable_fields = set(["city", "state", "zip"])
+        optional_fields = set(["city", "state", "zip", "page", "per_page", "limit"])
+        nullable_fields = set(["city", "state", "zip", "limit"])
         serialized = handler(self)
         m = {}
 

@@ -13,7 +13,7 @@ Developer-friendly & type-safe Python SDK specifically catered to leverage *perm
 PermitStack: 
 ## PermitStack Building Permit API
 
-Access 108M+ building permits across 10,000+ U.S. cities in 48 states and DC (798 active data sources spanning counties and statewide feeds, plus 75 historical archives), updated daily from official open data portals.
+Access 110M+ building permits across 8,000+ U.S. cities in 48 states and DC (810 active data sources including counties and statewide feeds, plus 75 historical archives), drawn from official city and county permit systems and open-data portals and re-ingested nightly for most sources.
 
 ### Getting started
 1. Sign up at [permit-stack.com](https://permit-stack.com/#pricing) for a free API key (100 req/day)
@@ -28,7 +28,10 @@ Indie      | 30           | 1,000
 Hobbyist   | 30           | 2,500
 Developer  | 60           | 10,000
 Business   | 200          | 100,000
-Enterprise | custom       | custom
+Scale      | 500          | 500,000
+
+Free keys cover the last 30 days of permits; every paid tier has full historical access.
+Higher volume or custom terms: support@permit-stack.com
 
 ### Support
 support@permit-stack.com
@@ -75,7 +78,7 @@ The SDK can be installed with *uv*, *pip*, or *poetry* package managers.
 *uv* is a fast Python package installer and resolver, designed as a drop-in replacement for pip and pip-tools. It's recommended for its speed and modern Python tooling capabilities.
 
 ```bash
-uv add git+https://github.com/PermitStack/permitstack-python.git
+uv add git+<UNSET>.git
 ```
 
 ### PIP
@@ -83,7 +86,7 @@ uv add git+https://github.com/PermitStack/permitstack-python.git
 *PIP* is the default package installer for Python, enabling easy installation and management of packages from PyPI via the command line.
 
 ```bash
-pip install git+https://github.com/PermitStack/permitstack-python.git
+pip install git+<UNSET>.git
 ```
 
 ### Poetry
@@ -91,7 +94,7 @@ pip install git+https://github.com/PermitStack/permitstack-python.git
 *Poetry* is a modern tool that simplifies dependency management and package publishing by using a single `pyproject.toml` file to handle project metadata and dependencies.
 
 ```bash
-poetry add git+https://github.com/PermitStack/permitstack-python.git
+poetry add git+<UNSET>.git
 ```
 
 ### Shell and script usage with `uv`
@@ -228,17 +231,27 @@ with Permitstack(
 * [health_check](docs/sdks/health/README.md#health_check) - Health Check
 * [public_stats](docs/sdks/health/README.md#public_stats) - Public Stats
 
+### [Metrics](docs/sdks/metrics/README.md)
+
+* [metrics_monthly](docs/sdks/metrics/README.md#metrics_monthly) - Metrics Monthly
+* [metrics_current](docs/sdks/metrics/README.md#metrics_current) - Metrics Current
+* [metrics_cities](docs/sdks/metrics/README.md#metrics_cities) - Metrics Cities
+
 ### [Permits](docs/sdks/permits/README.md)
 
 * [search_permits](docs/sdks/permits/README.md#search_permits) - Search Permits
 * [export_permits](docs/sdks/permits/README.md#export_permits) - Export Permits
+* [sync_permits](docs/sdks/permits/README.md#sync_permits) - Sync Permits
 * [list_permit_events](docs/sdks/permits/README.md#list_permit_events) - List Permit Events
 * [get_permit](docs/sdks/permits/README.md#get_permit) - Get Permit
 * [get_permits_by_address](docs/sdks/permits/README.md#get_permits_by_address) - Get Permits By Address
 * [get_coverage_stats](docs/sdks/permits/README.md#get_coverage_stats) - Get Coverage Stats
 * [list_plays](docs/sdks/permits/README.md#list_plays) - List Plays
+* [system_age](docs/sdks/permits/README.md#system_age) - System Age
 * [battery_retrofit_candidates](docs/sdks/permits/README.md#battery_retrofit_candidates) - Battery Retrofit Candidates
+* [reroof_due](docs/sdks/permits/README.md#reroof_due) - Reroof Due
 * [orphan_recovery](docs/sdks/permits/README.md#orphan_recovery) - Orphan Recovery
+* [list_covered_jurisdictions](docs/sdks/permits/README.md#list_covered_jurisdictions) - List Covered Jurisdictions
 
 ### [PropertyHistory](docs/sdks/propertyhistory/README.md)
 
@@ -250,7 +263,10 @@ with Permitstack(
 * [list_webhooks](docs/sdks/webhooks/README.md#list_webhooks) - List Webhooks
 * [create_webhook](docs/sdks/webhooks/README.md#create_webhook) - Create Webhook
 * [delete_webhook](docs/sdks/webhooks/README.md#delete_webhook) - Delete Webhook
+* [update_webhook](docs/sdks/webhooks/README.md#update_webhook) - Update Webhook
 * [test_webhook](docs/sdks/webhooks/README.md#test_webhook) - Test Webhook
+* [get_webhook_deliveries](docs/sdks/webhooks/README.md#get_webhook_deliveries) - Get Webhook Deliveries
+* [rotate_webhook_secret](docs/sdks/webhooks/README.md#rotate_webhook_secret) - Rotate Webhook Secret
 * [get_webhook_secret](docs/sdks/webhooks/README.md#get_webhook_secret) - Get Webhook Secret
 
 </details>
@@ -326,7 +342,7 @@ with Permitstack(
     res = None
     try:
 
-        res = p_client.permits.search_permits(radius_miles=5, record_kind="permit", page=1, per_page=25)
+        res = p_client.permits.search_permits(radius_miles=5.0, fields="summary", record_kind="permit", page=1, per_page=25, count_only=False)
 
         # Handle response
         print(res)
@@ -341,13 +357,15 @@ with Permitstack(
         print(e.raw_response)
 
         # Depending on the method different errors may be thrown
-        if isinstance(e, errors.HTTPValidationError):
-            print(e.data.detail)  # Optional[List[models.ValidationError]]
+        if isinstance(e, errors.FeatureLockedError):
+            print(e.data.detail)  # Optional[models.Detail]
 ```
 
 ### Error Classes
-**Primary error:**
+**Primary errors:**
 * [`PermitstackError`](./src/permitstack/errors/permitstackerror.py): The base class for HTTP error responses.
+  * [`ErrorDetail`](./src/permitstack/errors/errordetail.py): Missing or invalid API key. Pass a key as the `X-API-Key` header. *
+  * [`HTTPValidationError`](./src/permitstack/errors/httpvalidationerror.py): Validation Error. Status code `422`. *
 
 <details><summary>Less common errors (6)</summary>
 
@@ -360,7 +378,7 @@ with Permitstack(
 
 
 **Inherit from [`PermitstackError`](./src/permitstack/errors/permitstackerror.py)**:
-* [`HTTPValidationError`](./src/permitstack/errors/httpvalidationerror.py): Validation Error. Status code `422`. Applicable to 16 of 21 methods.*
+* [`FeatureLockedError`](./src/permitstack/errors/featurelockederror.py): Your plan does not include this endpoint, or an option you passed. The body is machine-readable: `error` is `feature_locked`, `feature` names the gate, `upgrade_url` links to the cheapest plan that unlocks it, and `current_tier` is the plan you are on. Status code `403`. Applicable to 11 of 31 methods.*
 * [`ResponseValidationError`](./src/permitstack/errors/responsevalidationerror.py): Type mismatch between the response data and the expected Pydantic model. Provides access to the Pydantic validation error via the `cause` attribute.
 
 </details>
@@ -471,6 +489,20 @@ class CustomClient(AsyncHttpClient):
 
 s = Permitstack(async_client=CustomClient(httpx.AsyncClient()))
 ```
+### httpx2 (Pydantic's httpx fork)
+
+[httpx2](https://httpx2.pydantic.dev/) is Pydantic's maintained fork of `httpx`. To run this SDK on httpx2, call `alias_httpx()` at your program's entry point, before importing the SDK, so every `import httpx` — including the ones inside the SDK — resolves to `httpx2`:
+```python
+import httpx2
+
+httpx2.alias_httpx()
+
+from permitstack import Permitstack
+
+s = Permitstack()
+```
+
+An SDK can also be generated against httpx2 directly, so it depends on the fork instead of `httpx`, by setting `python.httpClientLibrary: httpx2` in `gen.yaml`.
 <!-- End Custom HTTP Client [http-client] -->
 
 <!-- Start Resource Management [resource-management] -->
